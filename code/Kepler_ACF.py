@@ -21,7 +21,7 @@ import filter
 import gls
 import mpfit
 import pyfits
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 
 gap_days = 0.02043365  # assume for long cadence
 jump_arr = scipy.array([131.51139, 169.51883, 169.75000, 182.00000, 200.31000,
@@ -59,9 +59,8 @@ def corr_run(time, flux, flux_err, id, savedir, saveplot=True):
     lc_tab = atpy.Table()
     lc_tab.add_column('time', time)
     lc_tab.add_column('flux', flux)
-    lc_tab.add_column('flux_pdc', flux)
 
-    qt_max = [0., max(lc_tab.time)]
+    qt_max = [0., max(time)]
     tablen = 1
     x = 0
 
@@ -74,17 +73,17 @@ def corr_run(time, flux, flux_err, id, savedir, saveplot=True):
     for j in scipy.arange(tablen):
         if j % 2 == 0:
             pylab.axvspan(qt_max[j], qt_max[j+1], facecolor = 'k', alpha=0.1)
-    pylab.plot(lc_tab.time, lc_tab.flux_pdc, 'k-')
+    pylab.plot(time, flux, 'k-')
     for k in scipy.arange(len(jump_arr)):
         pylab.axvline(jump_arr[k], ls = '--', c = 'b')
-    pylab.xlim(lc_tab.time.min(), lc_tab.time.max())
-    pylab.ylim(min(lc_tab.flux_pdc[scipy.isfinite(lc_tab.flux_pdc) == True]), \
-               max(lc_tab.flux_pdc[scipy.isfinite(lc_tab.flux_pdc) == True]))
+    pylab.xlim(time.min(), time.max())
+    pylab.ylim(min(flux[scipy.isfinite(flux) == True]), \
+               max(flux[scipy.isfinite(flux) == True]))
     pylab.ylabel('Raw Flux')
     pylab.subplot(4,1,2)
-    pylab.plot(lc_tab.time, lc_tab.flux, 'k-')
-    pylab.xlim(lc_tab.time.min(), lc_tab.time.max())
-    pylab.ylim(lc_tab.flux.min(), lc_tab.flux.max())
+    pylab.plot(time, flux, 'k-')
+    pylab.xlim(time.min(), time.max())
+    pylab.ylim(flux.min(), flux.max())
     pylab.ylabel('Norm Flux')
 
     pylab.figure(2,(12, 9))
@@ -93,34 +92,34 @@ def corr_run(time, flux, flux_err, id, savedir, saveplot=True):
     for j in scipy.arange(tablen):
         if j % 2 == 0:
             pylab.axvspan(qt_max[j], qt_max[j+1], facecolor = 'k', alpha=0.1)
-    pylab.plot(lc_tab.time, lc_tab.flux_pdc, 'k-')
+    pylab.plot(time, flux, 'k-')
     for k in scipy.arange(len(jump_arr)):
         pylab.axvline(jump_arr[k], ls = '--', c = 'b')
-    pylab.xlim(lc_tab.time.min(), lc_tab.time.max())
-    pylab.ylim(min(lc_tab.flux_pdc[scipy.isfinite(lc_tab.flux_pdc) == True]), \
-               max(lc_tab.flux_pdc[scipy.isfinite(lc_tab.flux_pdc) == True]))
+    pylab.xlim(time.min(), time.max())
+    pylab.ylim(min(flux[scipy.isfinite(flux) == True]), \
+               max(flux[scipy.isfinite(flux) == True]))
     pylab.ylabel('Raw Flux')
     pylab.subplot(3,1,2)
-    pylab.plot(lc_tab.time, lc_tab.flux, 'k-')
-    pylab.xlim(lc_tab.time.min(), lc_tab.time.max())
-    pylab.ylim(lc_tab.flux.min(), lc_tab.flux.max())
+    pylab.plot(time, flux, 'k-')
+    pylab.xlim(time.min(), time.max())
+    pylab.ylim(flux.min(), flux.max())
     pylab.ylabel('Norm Flux')
     ax = pylab.gca()
     pylab.text(0.415, -0.15, 'Time (days)', transform = ax.transAxes)
     pylab.text(0.415, -1.4, 'Period (days)', transform = ax.transAxes)
 
     # max period searched for is len(flux) / 2
-    max_psearch_len = len(lc_tab.flux) / 2.0
+    max_psearch_len = len(flux) / 2.0
 
     # Calculate ACF
     print('Calculating ACF...')
 
     acf_tab, acf_per_pos, acf_per_height, acf_per_err, locheight, asym,  = \
-        acf_calc(time = lc_tab.time, flux = lc_tab.flux, interval = gap_days, \
+        acf_calc(time = time, flux = flux, interval = gap_days, \
                  kid = x, max_psearch_len = max_psearch_len)
 
     pgram_tab, sine_per[x], sine_height[x] = \
-        pgram_calc(time = lc_tab.time, flux = lc_tab.flux, \
+        pgram_calc(time = time, flux = flux, \
                    interval = gap_days, kid = x, max_psearch_len = max_psearch_len)
 
     pylab.figure(1)
@@ -144,7 +143,7 @@ def corr_run(time, flux, flux_err, id, savedir, saveplot=True):
         med_dlag_per[x], dlag_per_err[x], acf_peak_per[x], h1[x], w1[x], lh1[x], \
             hlocgrad[x], hloc_grad_scatter[x], width_grad[x], width_grad_scatter[x], \
             num_of_peaks[x], harmonic_det[x], sel_peaks, one_peak_only, peak_ratio =\
-            plot_stats(lc_tab.time, lc_tab.flux, x, acf_per_pos, \
+            plot_stats(time, flux, x, acf_per_pos, \
                        acf_per_height, acf_per_err, locheight, asym)
 
         n_s = 'k'
@@ -169,14 +168,14 @@ def corr_run(time, flux, flux_err, id, savedir, saveplot=True):
         # variability stats
         print('calculating var for P_med...')
         amp_all[x], amp_per[x], per_cent, var_arr_real = \
-            calc_var(kid = x, time_in = lc_tab.time, \
-                     flux = lc_tab.flux, period = acf_peak_per[x])
+            calc_var(kid = x, time_in = time, \
+                     flux = flux, period = acf_peak_per[x])
 
         pylab.figure(1)
         pylab.subplot(4,1,3)
         pylab.plot(per_cent, var_arr_real, 'k.')
         pylab.axhline(amp_per[x], ls = '--', c = 'b')
-        pylab.xlim(lc_tab.time.min(),lc_tab.time.max())
+        pylab.xlim(time.min(),time.max())
         pylab.ylim(var_arr_real.min(), var_arr_real.max())
         ax = pylab.gca()
         pylab.text(0.415, -0.15, 'Time (days)', transform = ax.transAxes)
@@ -189,9 +188,9 @@ def corr_run(time, flux, flux_err, id, savedir, saveplot=True):
             pylab.savefig('%s/%s_full.png' %(savedir, id_list[0]))
 
         maxpts = 40.0
-        if scipy.floor(lc_tab.time.max() / acf_peak_per[x]) < maxpts:
-            maxpts = float(scipy.floor(lc_tab.time.max() / acf_peak_per[x]))
-        inc = lc_tab.time - lc_tab.time.min() <= (maxpts*acf_peak_per[x])
+        if scipy.floor(time.max() / acf_peak_per[x]) < maxpts:
+            maxpts = float(scipy.floor(time.max() / acf_peak_per[x]))
+        inc = time - time.min() <= (maxpts*acf_peak_per[x])
 
 #         print('**************************', 'KID = ', x, 'PEAK HEIGHT = ', \
 #             max(acf_per_height[:2]), 'LOCAL PEAK HEIGHT = ', lh1[x])

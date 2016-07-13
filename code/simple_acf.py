@@ -36,9 +36,6 @@ def simple_acf(x, y):
                      if acf_smooth[i-1] < acf_smooth[i] and
                      acf_smooth[i+1] < acf_smooth[i]])
 
-    # throw the first peak away
-    peaks = peaks[1:]
-
     # find the first and second peaks
     if acf_smooth[peaks[0]] > acf_smooth[peaks[1]]:
         period = lags[peaks[0]]
