@@ -4,9 +4,9 @@ from simple_acf import simple_acf
 import pyfits
 from Kepler_ACF import corr_run
 import tarfile
+import os
 
-
-def process_data(prefix, id, c):
+def process_data(file):
     """
     Read the lightcurve from the fits format.
     prefix (str): the 4 digit number at the beginning of the epic id, e.g.
@@ -14,10 +14,6 @@ def process_data(prefix, id, c):
     id (str): the 4 digit number at the end of the epic id, e.g. "26368".
     c (str): campaign. e.g. "01"
     """
-
-    path = "data/c01/{0}00000/{1}".format(prefix, id)
-    file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_kepler_v1.0_lc.fits".format(path,
-                                                                      epic, c)
 
     # with open(file, "rb") as tarf:
     #     with tarfile.open(fileobj=tarf) as f:
@@ -36,22 +32,38 @@ def process_data(prefix, id, c):
 
 
 if __name__ == "__main__":
+    import everest
+    everest.compute.Compute(201126368)
+    assert 0
 
     # load lightcurves
     ids = np.genfromtxt("ids.txt", dtype=str)
     prefixes = np.genfromtxt("prefixes.txt", dtype=str)
+    c = "01"
     for p in prefixes:
         for id in ids:
 
             prefix = p[:4]
             epic = "{0}{1}".format(prefix, id)
-            c = "01"
-            x, y = process_data(prefix, id, c)
-            plt.clf()
-            plt.plot(x, y, "k.")
+            path = "data/c01/{0}00000/{1}".format(prefix, id)
+            end = "kepler_v1.0_lc.fits"
+            file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic,
+                                                                 c, end)
+            tf = "c{0}_{1}.tar.gz".format(c, p)
+            print(tf)
+            f = tf.getmember(file)
+            print(f)
+            assert 0
 
-            period, acf_smooth, lags = simple_acf(x, y)
-            plt.clf()
-            plt.plot(lags, acf_smooth)
-            plt.axvline(period, color="r")
-            plt.savefig("acfs/{}".format(epic))
+            if os.path.exists(file):
+                x, y = process_data(file)
+                plt.clf()
+                plt.plot(x, y, "k.")
+                plt.savefig("results/{}_lc".format(epic))
+
+                period, acf_smooth, lags, rvar = simple_acf(x, y)
+                plt.clf()
+                plt.plot(lags, acf_smooth)
+                plt.axvline(period, color="r")
+                plt.title("P = {0:.2f} Rvar = {1:.2f}".format(period, rvar))
+                plt.savefig("results/{}_acf".format(epic))

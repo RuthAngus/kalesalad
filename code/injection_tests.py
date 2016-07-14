@@ -43,7 +43,7 @@ def injection_params(N, params):
 
 
 def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
-                 incl_max=np.pi/4., amp_min=1e-8, amp_max=1e-4, pmin=.5,
+                 incl_max=np.pi/4., amp_min=1, amp_max=10, pmin=.5,
                  pmax=90, tau_min=5, tau_max=20):
     """
     Generate N fake light curves based on the parameter limits.
@@ -54,9 +54,10 @@ def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
     """
 
     x, y = k2lc(epic)
+    _, _, _, rvar = simple_acf(x, y)
 
-    params = [nspot_min, nspot_max, incl_min, incl_max, amp_min, amp_max,
-              pmin, pmax, tau_min, tau_max]
+    params = [nspot_min, nspot_max, incl_min, incl_max, amp_min*rvar,
+              amp_max*rvar, pmin, pmax, tau_min, tau_max]
     nspots, incl, periods, amps, tau = injection_params(N, params)
     true_params = {'nspots': nspots, 'incl': incl, 'periods': periods,
                    'amps': amps, 'tau': tau}
@@ -75,19 +76,29 @@ def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
     return xarr, yarr, x, y, true_params
 
 if __name__ == "__main__":
-    xarr, yarr, x, y, true_params = generate_lcs("201131066", 1, amp_min=1,
-                                                 amp_max=10)
+    N = 10
+    xarr, yarr, x, y, true_params = generate_lcs("201131066", N)
+    recovered = []
     for i in range(len(xarr[0, :])):
         xs, ys = xarr[:, i], yarr[:, i]
         period, acf, lags, rvar = simple_acf(xs, ys)
+        recovered.append(period)
 
         plt.clf()
         plt.subplot(2, 1, 1)
         plt.plot(x, y, "b.")
-        plt.plot(xs, ys, "k.", label="{0:.2f}".format(true_params["periods"][0]))
+        plt.plot(xs, ys, "k.", label="{0:.2f}".format(true_params["periods"][i]))
         plt.legend()
         plt.subplot(2, 1, 2)
         plt.plot(lags, acf)
         plt.axvline(period, color="r", label="{0:.2f}".format(period))
         plt.legend()
         plt.savefig("results/{0}".format(i))
+
+    amps = true_params["amps"]
+    truep = true_params["periods"]
+    plt.clf()
+    plt.plot(truep, recovered, "k.")
+    xs = np.linspace(min(truep), max(truep), 100)
+    plt.plot(xs, xs, "k--")
+    plt.savefig("test")

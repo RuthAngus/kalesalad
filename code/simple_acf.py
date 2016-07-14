@@ -37,11 +37,16 @@ def simple_acf(x, y):
                      acf_smooth[i+1] < acf_smooth[i]])
 
     # find the first and second peaks
-    if acf_smooth[peaks[0]] > acf_smooth[peaks[1]]:
-        period = lags[peaks[0]]
-    else: period = lags[peaks[1]]
+    if len(peaks) > 1:
+        if acf_smooth[peaks[0]] > acf_smooth[peaks[1]]:
+            period = lags[peaks[0]]
+        else: period = lags[peaks[1]]
+    else: period = np.nan
 
-    return period, acf_smooth, lags
+    rvar = np.percentile(y, 95)
+
+    return period, acf_smooth, lags, rvar
+
 
 # dan's acf function
 def dan_acf(x, axis=0, fast=False):
