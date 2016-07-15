@@ -42,7 +42,7 @@ def injection_params(N, params):
     return nspots, incl, periods, amps, tau
 
 
-def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
+def generate_lcs(x, y, id, N, nspot_min=50, nspot_max=500, incl_min=0,
                  incl_max=np.pi/4., amp_min=1, amp_max=100, pmin=.5,
                  pmax=90, tau_min=5, tau_max=20):
     """
@@ -52,9 +52,6 @@ def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
     returns 2d array of light curves, the k2 light curve and a dictionary of
     true parameters.
     """
-
-    x, y = k2lc(epic)
-    _, _, _, rvar = simple_acf(x, y)
 
     params = [nspot_min, nspot_max, incl_min, incl_max, amp_min*rvar,
               amp_max*rvar, pmin, pmax, tau_min, tau_max]
@@ -74,10 +71,16 @@ def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
         xarr[:, i] = x
     if N == 1:
         return xarr.T[0], yarr.T[0], x, y, true_params
-    return xarr, yarr, x, y, true_params
+
+    # save the results
+    np.savetxt("lcs.txt", yarr.T)
+    np.savetxt("xs.txt", xarr.T)
+    np.savetxt("truth.txt", np.vstack((nspots, incl, periods, amps, tau)).T)
+
+    return xarr, yarr, true_params
 
 if __name__ == "__main__":
-    N = 100  # number of light curves to simulate
+    N = 10  # number of light curves to simulate
     nspot_min = 50  # minimum number of spots
     nspot_max = 500  # maximum number of spots
     incl_min = 0  # minimum inclination
@@ -89,22 +92,35 @@ if __name__ == "__main__":
     tau_min = 5  # minimum spot lifetime (multiple of rotation period)
     tau_max = 20  # maximum spot lifetime (see above)
 
-    xarr, yarr, x, y, true_params = generate_lcs("201131066", N,
-                                                 nspot_min=nspot_min,
-                                                 nspot_max=nspot_max,
-                                                 incl_min=incl_min,
-                                                 incl_max=incl_max,
-                                                 amp_min=amp_min,
-                                                 amp_max=amp_max,
-                                                 pmin=pmin, pmax=pmax,
-                                                 tau_min=tau_min,
-                                                 tau_max=tau_max)
+    # load k2 lc
+    epic = "201131066"
+    x, y = k2lc(epic)
+    # _, _, _, rvar, _, _ = simple_acf(x, y)
+
+    # xarr, yarr, true_params = generate_lcs(x, y, epic, N,
+    #                                              nspot_min=nspot_min,
+    #                                              nspot_max=nspot_max,
+    #                                              incl_min=incl_min,
+    #                                              incl_max=incl_max,
+    #                                              amp_min=amp_min,
+    #                                              amp_max=amp_max,
+    #                                              pmin=pmin, pmax=pmax,
+    #                                              tau_min=tau_min,
+    #                                              tau_max=tau_max)
+    # periods = true_params["periods"]
+    # amps = true_params["amps"]
+
+    # load simulations
+    yarr = np.genfromtxt("lcs.txt").T
+    xarr = np.genfromtxt("xs.txt").T
+    _, _, periods, amps, _ = np.genfromtxt("truth.txt").T
 
     # recover and make plots
     recovered = []
     for i in range(len(xarr[0, :])):
         xs, ys = xarr[:, i], yarr[:, i]
-        period, acf, lags, rvar = simple_acf(xs, ys)
+        period, acf, lags, rvar, peaks, dips, leftdips, rightdips = \
+            simple_acf(xs, ys)
         recovered.append(period)
 
         print(i, "of", len(xarr[0, :]))
@@ -112,20 +128,28 @@ if __name__ == "__main__":
         plt.subplot(2, 1, 1)
         plt.plot(x, y, "b.")
         plt.plot(xs, ys, "k.",
-                 label="{0:.2f}".format(true_params["periods"][i]))
+                 label="{0:.2f}".format(periods[i]))
         plt.legend()
         plt.subplot(2, 1, 2)
         plt.plot(lags, acf)
+        plt.axvline(leftdips[0], color="b", alpha=.5)
+        plt.axvline(lags[peaks][0], color="r", alpha=.5)
+        plt.axvline(rightdips[0], color="b", alpha=.5)
+        # for j in peaks:
+        #     plt.axvline(lags[j], color="r", alpha=.5)
+        # for j in dips:
+        #     plt.axvline(lags[j], color="b", alpha=.5)
         plt.axvline(period, color="r", label="{0:.2f}".format(period))
         plt.legend()
         plt.savefig("results/simulations/{0}".format(i))
 
-    amps = true_params["amps"]
-    truep = true_params["periods"]
     plt.clf()
-    plt.scatter(truep, recovered, marker="o", c=true_params["amps"],
+    plt.scatter(periods, recovered, marker="o", c=amps,
                 edgecolor="")
     plt.colorbar()
-    xs = np.linspace(min(truep), max(truep), 100)
+    xs = np.linspace(min(periods), max(periods), 100)
     plt.plot(xs, xs, "k--")
     plt.savefig("test")
+
+    success = periods[np.abs(periods-recovered) < .1*periods]
+    print(len(success) / float(N), "success fraction")
