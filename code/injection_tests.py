@@ -43,7 +43,7 @@ def injection_params(N, params):
 
 
 def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
-                 incl_max=np.pi/4., amp_min=1, amp_max=10, pmin=.5,
+                 incl_max=np.pi/4., amp_min=1, amp_max=100, pmin=.5,
                  pmax=90, tau_min=5, tau_max=20):
     """
     Generate N fake light curves based on the parameter limits.
@@ -65,6 +65,7 @@ def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
     xarr = np.zeros((len(x), N))
     yarr = np.zeros((len(x), N))
     for i in range(N):
+        print(i, "of", N)
         res0, res1 = mklc(x, nspot=nspots[i], incl=incl[i], tau=tau[i],
                           p=periods[i])
         med = np.median(res1[2, :])
@@ -76,29 +77,55 @@ def generate_lcs(epic, N, nspot_min=50, nspot_max=500, incl_min=0,
     return xarr, yarr, x, y, true_params
 
 if __name__ == "__main__":
-    N = 10
-    xarr, yarr, x, y, true_params = generate_lcs("201131066", N)
+    N = 100  # number of light curves to simulate
+    nspot_min = 50  # minimum number of spots
+    nspot_max = 500  # maximum number of spots
+    incl_min = 0  # minimum inclination
+    incl_max = np.pi/4.  # maximum inclination
+    amp_min = 1  # minimum amplitude (multiple of range of variability)
+    amp_max = 100  # maximum amplitude (see above)
+    pmin = .5  # minimum period (days)
+    pmax = 90  # maximum period (days)
+    tau_min = 5  # minimum spot lifetime (multiple of rotation period)
+    tau_max = 20  # maximum spot lifetime (see above)
+
+    xarr, yarr, x, y, true_params = generate_lcs("201131066", N,
+                                                 nspot_min=nspot_min,
+                                                 nspot_max=nspot_max,
+                                                 incl_min=incl_min,
+                                                 incl_max=incl_max,
+                                                 amp_min=amp_min,
+                                                 amp_max=amp_max,
+                                                 pmin=pmin, pmax=pmax,
+                                                 tau_min=tau_min,
+                                                 tau_max=tau_max)
+
+    # recover and make plots
     recovered = []
     for i in range(len(xarr[0, :])):
         xs, ys = xarr[:, i], yarr[:, i]
         period, acf, lags, rvar = simple_acf(xs, ys)
         recovered.append(period)
 
+        print(i, "of", len(xarr[0, :]))
         plt.clf()
         plt.subplot(2, 1, 1)
         plt.plot(x, y, "b.")
-        plt.plot(xs, ys, "k.", label="{0:.2f}".format(true_params["periods"][i]))
+        plt.plot(xs, ys, "k.",
+                 label="{0:.2f}".format(true_params["periods"][i]))
         plt.legend()
         plt.subplot(2, 1, 2)
         plt.plot(lags, acf)
         plt.axvline(period, color="r", label="{0:.2f}".format(period))
         plt.legend()
-        plt.savefig("results/{0}".format(i))
+        plt.savefig("results/simulations/{0}".format(i))
 
     amps = true_params["amps"]
     truep = true_params["periods"]
     plt.clf()
-    plt.plot(truep, recovered, "k.")
+    plt.scatter(truep, recovered, marker="o", c=true_params["amps"],
+                edgecolor="")
+    plt.colorbar()
     xs = np.linspace(min(truep), max(truep), 100)
     plt.plot(xs, xs, "k--")
     plt.savefig("test")

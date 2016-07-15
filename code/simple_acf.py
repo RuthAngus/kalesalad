@@ -31,6 +31,9 @@ def simple_acf(x, y):
     acf_smooth = np.convolve(acf, conv_func, mode='same')
     acf_smooth, lags = acf_smooth[N:], lags[N:]
 
+    # ditch the first point
+    acf_smooth, lags = acf_smooth[1:], lags[1:]
+
     # find all the peaks
     peaks = np.array([i for i in range(1, len(lags)-1)
                      if acf_smooth[i-1] < acf_smooth[i] and
@@ -41,7 +44,7 @@ def simple_acf(x, y):
         if acf_smooth[peaks[0]] > acf_smooth[peaks[1]]:
             period = lags[peaks[0]]
         else: period = lags[peaks[1]]
-    else: period = np.nan
+    else: period = lags[peaks][0]
 
     rvar = np.percentile(y, 95)
 
