@@ -34,7 +34,7 @@ def simple_acf(x, y):
     # ditch the first point
     acf_smooth, lags = acf_smooth[1:], lags[1:]
 
-    peaks, dips, leftdips, rightdips = find_peaks(acf_smooth, lags)
+    peaks, dips, leftdips, rightdips, bigpeaks = find_peaks(acf_smooth, lags)
 
     # find the first and second peaks
     if len(peaks) > 1:
@@ -42,15 +42,18 @@ def simple_acf(x, y):
             period = lags[peaks[0]]
         else:
             period = lags[peaks[1]]
-    else:
+    elif len(peaks) == 1:
         period = lags[peaks][0]
+    elif not len(peaks):
+        period = np.nan
 
     rvar = np.percentile(y, 95)
 
-    return period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips
+    return period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
+        bigpeaks
 
 
-def find_peaks(acf_smooth, lags):
+def find_peaks(acf_smooth, lags, t=.2):
 
     # find all the peaks
     peaks = np.array([i for i in range(1, len(lags)-1)
@@ -78,11 +81,12 @@ def find_peaks(acf_smooth, lags):
     leftdip_heights = acf_smooth[lags == leftdips]
     rightdip_heights = acf_smooth[lags == rightdips]
     peak_heights = acf_smooth[peaks]
-    meandiffs = .5*((peak_heights - leftdip_heights) +
-                    (peak_heights - rightdip_heights))
+    meandiffs = .5*(np.abs(peak_heights - leftdip_heights) +
+                    np.abs(peak_heights - rightdip_heights))
+    bigpeaks = peaks[meandiffs > t]
+    print(meandiffs[:10])
 
-
-    return peaks, dips, leftdips, rightdips
+    return peaks, dips, leftdips, rightdips, bigpeaks
 
 
 def find_nearest(array, value):
@@ -122,6 +126,7 @@ def dan_acf(x, axis=0, fast=False):
     acf = np.fft.ifft(f * np.conjugate(f), axis=axis)[m].real
     m[axis] = 0
     return acf / acf[m]
+
 
 def make_plot(acf_smooth, lags, id):
         # find all the peaks

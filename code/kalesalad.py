@@ -15,13 +15,6 @@ def process_data(file):
     c (str): campaign. e.g. "01"
     """
 
-    # with open(file, "rb") as tarf:
-    #     with tarfile.open(fileobj=tarf) as f:
-    #         for mem in f.getmembers():
-    #             if not fnmatch.fnmatch(mem.name, "*.fits"):
-    #                 continue
-    #             fitsf = f.extractfile(mem)
-
     hdulist = pyfits.open(file)
     time, flux = hdulist[1].data["TIME"], hdulist[1].data["FLUX"]
     out = hdulist[1].data["OUTLIER"]
@@ -32,9 +25,9 @@ def process_data(file):
 
 
 if __name__ == "__main__":
-    import everest
-    everest.compute.Compute(201126368)
-    assert 0
+    # import everest
+    # everest.compute.Compute(201126368)
+    # assert 0
 
     # load lightcurves
     ids = np.genfromtxt("ids.txt", dtype=str)
@@ -49,10 +42,11 @@ if __name__ == "__main__":
             end = "kepler_v1.0_lc.fits"
             file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic,
                                                                  c, end)
-            tf = "c{0}_{1}.tar.gz".format(c, p)
-            print(tf)
-            f = tf.getmember(file)
-            print(f)
+            tf = "data/c{0}_{1}.tar.gz".format(c, p)
+            with tarfile.open(tf) as f:
+                print(f)
+                files = f.getmember(file)
+                print(files)
             assert 0
 
             if os.path.exists(file):

@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from kalesalad import process_data
 from mklc import mklc
 from simple_acf import simple_acf
+from Kepler_ACF import corr_run
+import time
 
 
 def k2lc(epic):
@@ -80,7 +82,7 @@ def generate_lcs(x, y, id, N, nspot_min=50, nspot_max=500, incl_min=0,
     return xarr, yarr, true_params
 
 if __name__ == "__main__":
-    N = 10  # number of light curves to simulate
+    N = 100  # number of light curves to simulate
     nspot_min = 50  # minimum number of spots
     nspot_max = 500  # maximum number of spots
     incl_min = 0  # minimum inclination
@@ -95,7 +97,13 @@ if __name__ == "__main__":
     # load k2 lc
     epic = "201131066"
     x, y = k2lc(epic)
-    # _, _, _, rvar, _, _ = simple_acf(x, y)
+    period, acf, lags, rvar, peaks, dips, leftdips, rightdips, bigpeaks \
+        = simple_acf(x, y)
+
+    start = time.time()
+    acf, lags, period, err, locheight = corr_run(x, y)
+    end = time.time()
+    print("time = ", end-start)
 
     # xarr, yarr, true_params = generate_lcs(x, y, epic, N,
     #                                              nspot_min=nspot_min,
@@ -117,13 +125,12 @@ if __name__ == "__main__":
 
     # recover and make plots
     recovered = []
-    for i in range(len(xarr[0, :])):
+    for i in range(N):
         xs, ys = xarr[:, i], yarr[:, i]
-        period, acf, lags, rvar, peaks, dips, leftdips, rightdips = \
-            simple_acf(xs, ys)
+        acf, lags, period, err, locheight = corr_run(xs, ys)
         recovered.append(period)
 
-        print(i, "of", len(xarr[0, :]))
+        print(i, "of", N)
         plt.clf()
         plt.subplot(2, 1, 1)
         plt.plot(x, y, "b.")
@@ -132,23 +139,20 @@ if __name__ == "__main__":
         plt.legend()
         plt.subplot(2, 1, 2)
         plt.plot(lags, acf)
-        plt.axvline(leftdips[0], color="b", alpha=.5)
-        plt.axvline(lags[peaks][0], color="r", alpha=.5)
-        plt.axvline(rightdips[0], color="b", alpha=.5)
-        # for j in peaks:
-        #     plt.axvline(lags[j], color="r", alpha=.5)
-        # for j in dips:
-        #     plt.axvline(lags[j], color="b", alpha=.5)
-        plt.axvline(period, color="r", label="{0:.2f}".format(period))
+        plt.axvline(period, color="r", label="{0:.2f}".format(locheight))
         plt.legend()
         plt.savefig("results/simulations/{0}".format(i))
 
     plt.clf()
-    plt.scatter(periods, recovered, marker="o", c=amps,
+    periods, recovered = np.array(periods[:N]), np.array(recovered)
+    m = periods > 0
+    plt.scatter(periods[m], recovered[m], marker="o", c=amps[m],
                 edgecolor="")
     plt.colorbar()
+    plt.ylim(0, 100)
     xs = np.linspace(min(periods), max(periods), 100)
     plt.plot(xs, xs, "k--")
+    plt.plot(xs, .5 * xs, "k--")
     plt.savefig("test")
 
     success = periods[np.abs(periods-recovered) < .1*periods]
