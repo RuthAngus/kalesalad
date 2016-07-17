@@ -95,7 +95,7 @@ def corr_run(time, flux):
         if locheight == [-9999]:
             locheight = 0
         if locheight < 0.1:
-            period = 0
+            period[x] = 0
 
         # variability stats
         amp_all[x], amp_per[x], per_cent, var_arr_real = \
