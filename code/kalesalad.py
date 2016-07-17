@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 import pyfits
@@ -29,7 +30,10 @@ if __name__ == "__main__":
     ids = np.genfromtxt("ids.txt", dtype=str)
     p = np.genfromtxt("prefixes.txt", dtype=str)
     c = "01"
-    periods, perr, epics = [], [], []
+
+    assert os.path.exists("c{0}_{1}_periods.txt".format(c, str(p)[:4])) == \
+            False, "You need to delete the old file!"
+
     for i, id in enumerate(ids):
 
         prefix = str(p)[:4]
@@ -38,12 +42,19 @@ if __name__ == "__main__":
         end = "kepler_v1.0_lc.fits"
         file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic,
                                                                 c, end)
+
         if os.path.exists(file):
             print(i, "of", len(ids))
             x, y = process_data(file)
-            plt.clf()
 
+            # compute the acf
             acf_smooth, lags, period, err, locheight = corr_run(x, y)
+#             if period == -9999:  # convert silly -999
+#                 period = 0
+#             if err == -9999:
+#                 err = 0
+
+            # make a plot
             plt.clf()
             plt.subplot(2, 1, 1)
             plt.plot(x, y, "k.")
@@ -52,9 +63,7 @@ if __name__ == "__main__":
             plt.axvline(period, color="r")
             plt.title("P = {0:.2f}".format(period))
             plt.savefig("results/{}_acf".format(epic))
-            periods.append(period)
-            perr.append(err)
-            epics.append(epic)
 
-    data = np.vstack((np.array(epics), np.array(periods), np.array(perr)))
-    np.savetxt("{0}{1}_periods.txt", data.T)
+            # append data to file
+            with open("c{0}_{1}_periods.txt".format(c, prefix), "a") as f:
+                f.write("{0} {1} {2} \n".format(epic, period, err))

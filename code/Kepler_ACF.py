@@ -139,7 +139,7 @@ def corr_run(time, flux):
     t.add_column('harmonic_det', harmonic_det)
     t.add_column('amp_all', amp_all)
     t.add_column('amp_per', amp_per)
-    return acf_smooth, lags, period[0], dlag_per_err, locheight
+    return acf_smooth, lags, period[0], dlag_per_err[0], locheight
 
 def acf_calc(time, flux, interval, kid, max_psearch_len):
 
