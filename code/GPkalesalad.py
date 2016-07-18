@@ -26,7 +26,9 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
 
     print(p_init, np.exp(plims))
 
-    sub = int(p_init / npts * 48)  # 10 points per period
+    sub = int(p_init / float(npts) * 48)  # 10 points per period
+    print(sub, p_init, npts)
+    assert 0
     ppd = 48. / sub
     ppp = ppd * p_init
     print("sub = ", sub, "points per day =", ppd, "points per period =", ppp)
