@@ -74,7 +74,7 @@ def run_acf(c, p, ids, plot=False):
 
             # make a plot
             if plot:
-                p = period
+#                 p = period
                 plt.clf()
                 plt.subplot(2, 1, 1)
                 plt.plot(x, y, "k.")
@@ -83,11 +83,11 @@ def run_acf(c, p, ids, plot=False):
                 plt.ylabel("$\mathrm{Normalised~flux}$")
                 plt.subplot(2, 1, 2)
                 plt.plot(lags, acf_smooth, "k")
-                plt.xlabel("$\mathrm{lags~(days)}$")
-                plt.ylabel("$\mathrm{ACF}$")
-                plt.axvline(p, color="CornFlowerBlue",
-                            label="${0:.2f}$".format(p))
-                plt.legend(loc="best")
+#                 plt.xlabel("$\mathrm{lags~(days)}$")
+#                 plt.ylabel("$\mathrm{ACF}$")
+#                 plt.axvline(p, color="m")
+#                             label="${0:.2f}$".format(p))
+#                 plt.legend(loc="best")
                 plt.savefig("results/{}_acf".format(epic))
 
 
