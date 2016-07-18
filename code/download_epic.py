@@ -28,7 +28,16 @@ def get_catalog(name, basepath="data"):
 if __name__ == "__main__":
     df = get_catalog("k2targets")
 
-    ids = np.sort(df.epic_number)
+    ids = df.epic_number
     inds = np.argsort(df.epic_number)
-    print(inds[0])
+    print(df.keys())
+    teffs = df.k2_teff
+    b = df.k2_bjmag
+    v = df.k2_vjmag
+    j = df.k2_jmag
+    k = df.k2_kmag
+    print(k[inds])
+    ra, raerr = df.ra, df.raerr
+    dec, decerr = df.dec, df.decerr
+    glon, glonerr = df.k2_glon, df.k2_glonerr
     idlist = ids[1951:3626]
