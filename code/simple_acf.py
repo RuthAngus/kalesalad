@@ -47,6 +47,12 @@ def simple_acf(x, y):
     elif not len(peaks):
         period = np.nan
 
+    # find the highest peak
+    m = acf_smooth == max(acf_smooth[peaks])
+    highest_peak = acf_smooth[m][0]
+    period = lags[m][0]
+    print(highest_peak, period)
+
     rvar = np.percentile(y, 95)
 
     return period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
@@ -84,7 +90,6 @@ def find_peaks(acf_smooth, lags, t=.2):
     meandiffs = .5*(np.abs(peak_heights - leftdip_heights) +
                     np.abs(peak_heights - rightdip_heights))
     bigpeaks = peaks[meandiffs > t]
-    print(meandiffs[:10])
 
     return peaks, dips, leftdips, rightdips, bigpeaks
 
@@ -127,36 +132,6 @@ def dan_acf(x, axis=0, fast=False):
     m[axis] = 0
     return acf / acf[m]
 
-
-def make_plot(acf_smooth, lags, id):
-        # find all the peaks
-        peaks = np.array([i for i in range(1, len(lags)-1)
-                         if acf_smooth[i-1] < acf_smooth[i] and
-                         acf_smooth[i+1] < acf_smooth[i]])
-
-        # throw the first peak away
-        peaks = peaks[1:]
-
-        # find the lag of highest correlation
-        m = acf_smooth ==  max(acf_smooth[peaks])
-        highest = lags[m]
-
-        # find the first and second peaks
-        if acf_smooth[peaks[0]] > acf_smooth[peaks[1]]:
-            period = lags[peaks[0]]
-        else: period = lags[peaks[1]]
-        print(period)
-
-        plt.clf()
-        plt.subplot(2, 1, 1)
-        plt.plot(x, y, "k.")
-        plt.subplot(2, 1, 2)
-        for i in peaks:
-            plt.axvline(lags[i], color="r")
-        plt.axvline(highest, color="g")
-        plt.axvline(period, color="k")
-        plt.plot(lags, acf_smooth)
-        plt.savefig("%s_acf" % id)
 
 if __name__ == "__main__":
 

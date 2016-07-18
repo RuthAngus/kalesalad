@@ -25,12 +25,14 @@ def process_data(file):
     return x, y
 
 
-if __name__ == "__main__":
-
-    # load lightcurves
-    ids = np.genfromtxt("ids.txt", dtype=str)
-    p = np.genfromtxt("prefixes.txt", dtype=str)
-    c = "01"
+def run_acf(c, p, ids, plot=False):
+    """
+    Run the ACF on all light curves in the specified campaign, with the
+    specified prefix.
+    c (str): campaign, e.g. "c01".
+    p (int): prefix, e.g. 2011.
+    ids (np.array of ints): list of epic ids (9 digits).
+    """
 
     assert os.path.exists("c{0}_{1}_periods.txt".format(c, str(p)[:4])) == \
             False, "You need to delete the old file!"
@@ -54,17 +56,26 @@ if __name__ == "__main__":
                     bigpeaks = simple_acf(x, y)
             err = 0
 
-
             # append data to file
             with open("c{0}_{1}_periods.txt".format(c, prefix), "a") as f:
                 f.write("{0} {1} {2} \n".format(epic, period, err))
 
             # make a plot
-            plt.clf()
-            plt.subplot(2, 1, 1)
-            plt.plot(x, y, "k.")
-            plt.subplot(2, 1, 2)
-            plt.plot(lags, acf_smooth)
-            plt.axvline(period, color="r")
-            plt.title("P = {0:.2f}".format(period))
-            plt.savefig("results/{}_acf".format(epic))
+            if plot:
+                plt.clf()
+                plt.subplot(2, 1, 1)
+                plt.plot(x, y, "k.")
+                plt.subplot(2, 1, 2)
+                plt.plot(lags, acf_smooth)
+                plt.axvline(period, color="r")
+                plt.title("P = {0:.2f}".format(period))
+                plt.savefig("results/{}_acf".format(epic))
+
+
+if __name__ == "__main__":
+
+    # load lightcurves
+    ids = np.genfromtxt("ids.txt", dtype=str)
+    p = np.genfromtxt("prefixes.txt", dtype=str)
+    c = "01"
+    run_acf(c, p, ids, plot=False)

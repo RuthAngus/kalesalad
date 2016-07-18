@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from kalesalad import process_data
@@ -105,18 +106,18 @@ if __name__ == "__main__":
     end = time.time()
     print("time = ", end-start)
 
-    # xarr, yarr, true_params = generate_lcs(x, y, epic, N,
-    #                                              nspot_min=nspot_min,
-    #                                              nspot_max=nspot_max,
-    #                                              incl_min=incl_min,
-    #                                              incl_max=incl_max,
-    #                                              amp_min=amp_min,
-    #                                              amp_max=amp_max,
-    #                                              pmin=pmin, pmax=pmax,
-    #                                              tau_min=tau_min,
-    #                                              tau_max=tau_max)
-    # periods = true_params["periods"]
-    # amps = true_params["amps"]
+    xarr, yarr, true_params = generate_lcs(x, y, epic, N,
+                                                 nspot_min=nspot_min,
+                                                 nspot_max=nspot_max,
+                                                 incl_min=incl_min,
+                                                 incl_max=incl_max,
+                                                 amp_min=amp_min,
+                                                 amp_max=amp_max,
+                                                 pmin=pmin, pmax=pmax,
+                                                 tau_min=tau_min,
+                                                 tau_max=tau_max)
+    periods = true_params["periods"]
+    amps = true_params["amps"]
 
     # load simulations
     yarr = np.genfromtxt("lcs.txt").T
@@ -127,7 +128,9 @@ if __name__ == "__main__":
     recovered = []
     for i in range(N):
         xs, ys = xarr[:, i], yarr[:, i]
-        acf, lags, period, err, locheight = corr_run(xs, ys)
+#         acf, lags, period, err, locheight = corr_run(xs, ys)
+        period, acf, lags, rvar, peaks, dips, leftdips, rightdips, bigpeaks \
+            = simple_acf(xs, ys)
         recovered.append(period)
 
         print(i, "of", N)
@@ -139,7 +142,7 @@ if __name__ == "__main__":
         plt.legend()
         plt.subplot(2, 1, 2)
         plt.plot(lags, acf)
-        plt.axvline(period, color="r", label="{0:.2f}".format(locheight))
+        plt.axvline(period, color="r", label="{0:.2f}".format(period))
         plt.legend()
         plt.savefig("results/simulations/{0}".format(i))
 
