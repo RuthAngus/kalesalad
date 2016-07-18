@@ -9,4 +9,10 @@ plot_results.py: code for generating results plots.
 GPkalesalad.py: measuring rotation periods using GPs (in dev).
 GProtation.py: contains functions used by GPkalesalad.
 
+c01_????_periods.txt: results files. Columns = epicid, period, period_err
+(currently all zeros!)
+
 ????_ids.txt: text files containing list of epic ids (last 5 digits only).
+
+Now run on campaign 1.
+Downloading campaign 2 light curves right now!
