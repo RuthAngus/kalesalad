@@ -4,6 +4,11 @@ from download_epic import get_catalog
 import os
 
 
+def period2age(period, bv):
+    a, b, c, n = .4, .31, .4, .55
+    return (period / (a*(bv-c)**b) )**(1./n) * 1e-3
+
+
 def get_EB_catalog(name, basepath="data"):
     fn = os.path.join(basepath, "{0}.h5".format(name))
     if os.path.exists(fn):
@@ -27,7 +32,8 @@ def match(myids, myperiods, df, no_binaries=True):
     """
 
     bv, bverr, teff, tefferr1, tefferr2, ra, raerr, dec, decerr, logg, \
-            loggerr1, loggerr2 = [np.zeros_like(myids) for i in range(12)]
+            loggerr1, loggerr2, lon, lonerr, lat, laterr = \
+            [np.zeros_like(myids) for i in range(16)]
 
     if no_binaries:
         ebids = remove_binaries()  # load the list of binary ids
@@ -49,6 +55,8 @@ def match(myids, myperiods, df, no_binaries=True):
         dec[i], decerr[i] = df.dec[m], df.decerr[m]
         logg[i] = df.k2_logg[m]
         loggerr1[i], loggerr2[i] = df.k2_loggerr1[m], df.k2_loggerr2[m]
+        lon[i], lonerr[i] = df.k2_glon[m], df.k2_glonerr[m]
+        lat[i], laterr[i] = df.k2_glat[m], df.k2_glaterr[m]
 
     return {"id": myids,
             "period": myperiods,
@@ -63,7 +71,11 @@ def match(myids, myperiods, df, no_binaries=True):
             "decerr": decerr,
             "logg": logg,
             "loggerr1": loggerr1,
-            "loggerr2": loggerr2}
+            "loggerr2": loggerr2,
+            "lon": lon,
+            "lonerr": lonerr,
+            "lat": lat,
+            "laterr": laterr}
 
 
 def remove_binaries(path="data"):
@@ -92,14 +104,16 @@ if __name__ == "__main__":
     c = "01"
     prefixes = ["2011", "2012", "2013", "2014", "2015", "2016", "2017",
                 "2018", "2019", "2102"]
+#     prefixes = ["2011", "2012"]
     myids, periods, err = combine_campaign_data(c, prefixes)
 
 #     data = np.genfromtxt("data/EB_catalog_periods.txt", skip_header=65).T
 #     EBids, EBperiods = data[0], data[3]
+#     k2 = match(EBids, EBperiods, df)
 
     df = get_catalog("k2targets")
-#     print(df.keys())
-#     k2 = match(EBids, EBperiods, df)
+    print(df.keys())
+
     k2 = match(myids, periods, df)
 
     plotpar = {'axes.labelsize': 20,
@@ -113,23 +127,42 @@ if __name__ == "__main__":
     plt.clf()
     plt.plot(k2["teff"], k2["logg"], "k.")
     plt.xlim(max(k2["teff"]), min(k2["teff"]))
+    plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
+    plt.ylabel("$\log~(g)~[\log_{10}\mathrm{(cgs)}]$")
+    plt.ylim(0, 6)
     plt.savefig("figs/teff_vs_logg")
 
     plt.clf()
-    m = (k2["period"] < 100) * (k2["period"] > 0)
+    m = (k2["period"] < 45) * (k2["period"] > 0)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=k2["period"][m],
-                edgecolor="w")
-    plt.xlabel("$\mathrm{Declination}$")
-    plt.xlabel("$\mathrm{Right~Ascension}$")
+                edgecolor="", cmap="GnBu", s=3)
+    plt.xlabel("$\mathrm{Declination~(degrees)}$")
+    plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
+    plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
+    plt.subplots_adjust(bottom=.2)
     plt.savefig("figs/ra_vs_dec")
 
     plt.clf()
-    m = (k2["period"] < 100) * (k2["period"] > 0) * (k2["logg"] > 4.2)
+    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4)
+    age = period2age(k2["period"][m], k2["bv"][m])
+    print(age[:100])
+    plt.scatter(k2["lon"][m], k2["lat"][m], marker="o", c=age,
+                edgecolor="", cmap="RdPu", s=3)
+    plt.xlabel("$\mathrm{Galactic~longitude}$")
+    plt.ylabel("$\mathrm{Galactic~latitude}$")
+#     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
+    plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
+    plt.subplots_adjust(bottom=.2)
+    plt.savefig("figs/lon_vs_lat")
+
+    plt.clf()
+    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["logg"] > 4.2)
     p = k2["period"][m]
     teff = k2["teff"][m]
-    plt.plot(teff, p, "k.")
+    plt.plot(teff, p, "k.", markersize=3)
     plt.xlim(max(teff), min(teff))
     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
     plt.ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
     plt.yscale("log")
+    plt.subplots_adjust(left=.2)
     plt.savefig("figs/period_vs_bv")
