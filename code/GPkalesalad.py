@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from GProtation import MCMC, make_plot, lnprob
 from kalesalad import process_data
@@ -19,7 +20,7 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
     print("acf period, err = ", p_init)
 
     if p_init < .1:  # prevent unphysical periods
-            p_init = 1.
+            p_init = 10.
 
     # Format data
     plims = np.log([p_init - tol*p_init, p_init + tol*p_init])
@@ -27,8 +28,6 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
     print(p_init, np.exp(plims))
 
     sub = int(p_init / float(npts) * 48)  # 10 points per period
-    print(sub, p_init, npts)
-    assert 0
     ppd = 48. / sub
     ppp = ppd * p_init
     print("sub = ", sub, "points per day =", ppd, "points per period =", ppp)
@@ -100,9 +99,8 @@ if __name__ == "__main__":
             print(i, "of", len(ids))
             x, y = process_data(file)
 
-        burnin, run, npts, tol = 500, 1000, 50, .4  # MCMC. max npts is 48
+        burnin, run, npts, tol = 2, 50, 50, .4  # MCMC. max npts is 48
         yerr = np.ones_like(y) * 1e-5
         interval = 0.02043365  # assume for long cadence
         recover_injections(id, x, y, yerr, path, burnin, run, interval, tol,
                            npts, nwalkers=12, plot=True)
-        assert 0

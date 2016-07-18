@@ -11,9 +11,6 @@ except:
     import triangle
 import h5py
 import subprocess
-from plotstuff import params, colours
-reb = params()
-cols = colours()
 import scipy.optimize as spo
 import time
 
@@ -56,7 +53,7 @@ def lnprob(theta, x, y, yerr, plims):
 def lnlike(theta, x, y, yerr):
     theta = np.exp(theta)
     k = theta[0] * ExpSquaredKernel(theta[1]) \
-            * ExpSine2Kernel(theta[2], theta[4])
+            * ExpSine2Kernel(theta[2], theta[4]) + WhiteKernel(theta[3])
     gp = george.GP(k, solver=george.HODLRSolver)
     try:
         gp.compute(x, np.sqrt(theta[3]+yerr**2))
@@ -120,10 +117,10 @@ def make_plot(sampler, x, y, yerr, ID, DIR, traces=False, tri=False,
         xs = np.linspace(x[0], x[-1], 1000)
         mu, cov = gp.predict(y, xs)
         plt.clf()
-        plt.errorbar(x-x[0], y, yerr=yerr, **reb)
+        plt.errorbar(x-x[0], y, yerr=yerr, fmt="k.", capsize=0)
         plt.xlabel("$\mathrm{Time~(days)}$")
         plt.ylabel("$\mathrm{Normalised~Flux}$")
-        plt.plot(xs, mu, color=cols.lightblue)
+        plt.plot(xs, mu, color="CornFlowerBlue")
         plt.xlim(min(x), max(x))
         plt.savefig("%s/%s_prediction" % (DIR, ID))
         print("%s/%s_prediction.png" % (DIR, ID))
@@ -155,7 +152,7 @@ def MCMC(theta_init, x, y, yerr, plims, burnin, run, ID, DIR, nwalkers=32,
 
         plt.clf()
         plt.errorbar(xl, yl, yerr=yerrl, **reb)
-        plt.plot(xs, mu, color=cols.blue)
+        plt.plot(xs, mu, color="CornFlowerBlue")
 
         args = (xl, yl, yerrl)
         results = spo.minimize(neglnlike, theta_init, args=args)
@@ -167,7 +164,7 @@ def MCMC(theta_init, x, y, yerr, plims, burnin, run, ID, DIR, nwalkers=32,
         gp.compute(xl, yerrl)
 
         mu, cov = gp.predict(yl, xs)
-        plt.plot(xs, mu, color=cols.pink, alpha=.5)
+        plt.plot(xs, mu, color="m", alpha=.5)
         plt.savefig("%s/%s_init" % (DIR, ID))
         print("%s/%s_init.png" % (DIR, ID))
 

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pyfits
 from Kepler_ACF import corr_run
 import os
+from simple_acf import simple_acf
 
 
 def process_data(file):
@@ -48,11 +49,15 @@ if __name__ == "__main__":
             x, y = process_data(file)
 
             # compute the acf
-            acf_smooth, lags, period, err, locheight = corr_run(x, y)
-#             if period == -9999:  # convert silly -999
-#                 period = 0
-#             if err == -9999:
-#                 err = 0
+#             acf_smooth, lags, period, err, locheight = corr_run(x, y)
+            period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
+                    bigpeaks = simple_acf(x, y)
+            err = 0
+
+
+            # append data to file
+            with open("c{0}_{1}_periods.txt".format(c, prefix), "a") as f:
+                f.write("{0} {1} {2} \n".format(epic, period, err))
 
             # make a plot
             plt.clf()
@@ -63,7 +68,3 @@ if __name__ == "__main__":
             plt.axvline(period, color="r")
             plt.title("P = {0:.2f}".format(period))
             plt.savefig("results/{}_acf".format(epic))
-
-            # append data to file
-            with open("c{0}_{1}_periods.txt".format(c, prefix), "a") as f:
-                f.write("{0} {1} {2} \n".format(epic, period, err))
