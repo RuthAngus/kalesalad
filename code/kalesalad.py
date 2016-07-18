@@ -5,6 +5,8 @@ import pyfits
 from Kepler_ACF import corr_run
 import os
 from simple_acf import simple_acf
+import sys
+from multiprocessing import Pool
 
 
 def process_data(file):
@@ -72,10 +74,18 @@ def run_acf(c, p, ids, plot=False):
                 plt.savefig("results/{}_acf".format(epic))
 
 
-if __name__ == "__main__":
-
+def run_kalesalad(index):
+    """
+    Measure all rotation periods in campaign 1 using parallel processing
+    """
     # load lightcurves
-    ids = np.genfromtxt("ids.txt", dtype=str)
-    p = np.genfromtxt("prefixes.txt", dtype=str)
+    p = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019",
+         "2102"]
+    ids = np.genfromtxt("{0}_ids.txt".format(p[index]), dtype=str)
     c = "01"
-    run_acf(c, p, ids, plot=False)
+    run_acf(c, p[index], ids, plot=False)
+
+
+if __name__ == "__main__":
+    pool = Pool()
+    pool.map(run_kalesalad, range(9))
