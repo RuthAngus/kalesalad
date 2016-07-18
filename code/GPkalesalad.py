@@ -3,7 +3,7 @@ import numpy as np
 from GProtation import MCMC, make_plot, lnprob
 from kalesalad import process_data
 import os
-from Kepler_ACF import corr_run
+from simple_acf import simple_acf
 import time
 import emcee
 import h5py
@@ -16,8 +16,9 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
     npts: number of points per period.
     """
 
-    acf, lags, p_init, err, locheight = corr_run(x, y)
-    print("acf period, err = ", p_init)
+    p_init, acf_smooth, lags, _, _, _, _, _, _ = simple_acf(x, y)
+
+    print("acf period = ", p_init)
 
     if p_init < .1:  # prevent unphysical periods
             p_init = 10.
@@ -84,9 +85,10 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
 
 if __name__ == "__main__":
 
-    ids = np.genfromtxt("ids.txt", dtype=str)
+    ids = np.genfromtxt("2011_ids.txt", dtype=str)
     p = np.genfromtxt("prefixes.txt", dtype=str)
     c = "01"
+    ids = ["31793"]
     periods, perr, epics = [], [], []
     for i, id in enumerate(ids):
         prefix = str(p)[:4]
@@ -99,7 +101,7 @@ if __name__ == "__main__":
             print(i, "of", len(ids))
             x, y = process_data(file)
 
-        burnin, run, npts, tol = 2, 50, 50, .4  # MCMC. max npts is 48
+        burnin, run, npts, tol = 100, 1000, 10, .4  # MCMC. max npts is 48
         yerr = np.ones_like(y) * 1e-5
         interval = 0.02043365  # assume for long cadence
         recover_injections(id, x, y, yerr, path, burnin, run, interval, tol,

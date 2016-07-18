@@ -104,7 +104,7 @@ if __name__ == "__main__":
     c = "01"
     prefixes = ["2011", "2012", "2013", "2014", "2015", "2016", "2017",
                 "2018", "2019", "2102"]
-#     prefixes = ["2011", "2012"]
+#     prefixes = ["2011"]
     myids, periods, err = combine_campaign_data(c, prefixes)
 
 #     data = np.genfromtxt("data/EB_catalog_periods.txt", skip_header=65).T
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     plt.clf()
     m = (k2["period"] < 45) * (k2["period"] > 0)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=k2["period"][m],
-                edgecolor="", cmap="GnBu", s=3)
+            edgecolor="", cmap="YlGnBu", s=3)
     plt.xlabel("$\mathrm{Declination~(degrees)}$")
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
@@ -143,10 +143,10 @@ if __name__ == "__main__":
     plt.savefig("figs/ra_vs_dec")
 
     plt.clf()
-    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4)
-    age = period2age(k2["period"][m], k2["bv"][m])
-    print(age[:100])
-    plt.scatter(k2["lon"][m], k2["lat"][m], marker="o", c=age,
+    age = period2age(k2["period"], k2["bv"])
+    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
+            * (age < 13) * np.isfinite(age)
+    plt.scatter(k2["lon"][m], k2["lat"][m], marker="o", c=age[m],
                 edgecolor="", cmap="RdPu", s=3)
     plt.xlabel("$\mathrm{Galactic~longitude}$")
     plt.ylabel("$\mathrm{Galactic~latitude}$")
