@@ -8,7 +8,6 @@ from simple_acf import simple_acf
 import sys
 from multiprocessing import Pool
 
-
 plotpar = {'axes.labelsize': 20,
            'text.fontsize': 20,
            'legend.fontsize': 20,
@@ -16,7 +15,6 @@ plotpar = {'axes.labelsize': 20,
            'ytick.labelsize': 20,
            'text.usetex': True}
 plt.rcParams.update(plotpar)
-
 
 def process_data(file):
     """
@@ -36,7 +34,7 @@ def process_data(file):
     return x, y
 
 
-def run_acf(c, p, ids, plot=False):
+def run_acf(c, p, plot=False):
     """
     Run the ACF on all light curves in the specified campaign, with the
     specified prefix.
@@ -48,12 +46,13 @@ def run_acf(c, p, ids, plot=False):
     assert os.path.exists("c{0}_{1}_periods.txt".format(c, str(p)[:4])) == \
             False, "You need to delete the old file!"
 
+    ids = np.genfromtxt("{0}_ids.txt".format(str(p)[:4]), dtype=str)
+
     for i, id in enumerate(ids):
 
         prefix = str(p)[:4]
         epic = "{0}{1}".format(prefix, id)
-        print(epic)
-        path = "data/c01/{0}00000/{1}".format(prefix, id)
+        path = "data/c{0}/{1}00000/{2}".format(c, prefix, id)
         end = "kepler_v1.0_lc.fits"
         file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic,
                                                                 c, end)
@@ -89,32 +88,21 @@ def run_acf(c, p, ids, plot=False):
 #                             label="${0:.2f}$".format(p))
 #                 plt.legend(loc="best")
                 plt.savefig("results/{}_acf".format(epic))
+        else:
+            print(file, "file not found")
 
 
 def run_kalesalad(index):
     """
     Measure all rotation periods in campaign 1 using parallel processing
-    Campaign 1:
-    p = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019",
-           "2102"]
-    c = "01"
     """
-    # Campaign 1
-    p = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019",
-           "2102"]
-    p = ["2011"]
-    c = "01"
-    # Campaign 2
-#     p = ["2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031",
-#            "2032", "2033", "2034", "2035", "2036", "2037", "2038", "2039",
-#            "2040", "2041", "2042", "2043", "2044", "2045", "2046", "2047",
-#            "2048", "2049", "2050", "2051", "2052", "2053", "2054", "2056",
-#            "2057"]
-#     c = "02"
-    ids = np.genfromtxt("{0}_ids.txt".format(p[index]), dtype=str)
-    run_acf(c, p[index], ids, plot=True)
+    c = str(sys.argv[1])
+    p = np.genfromtxt("c{0}_prefixes.txt".format(c), dtype=str)
+    run_acf(c, p[index], plot=False)
 
 
 if __name__ == "__main__":
+    c = str(sys.argv[1])
+    N = len(np.genfromtxt("c{0}_prefixes.txt".format(c), dtype=str))
     pool = Pool()
-    pool.map(run_kalesalad, range(1))
+    pool.map(run_kalesalad, range(N))
