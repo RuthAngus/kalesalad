@@ -59,15 +59,17 @@ def run_acf(c, fn, plot=False):
             if plot:
                 plt.clf()
                 plt.subplot(2, 1, 1)
-                plt.plot(x, y, "k.")
-                plt.xlim(min(x), max(x))
+                plt.plot(x-x[0], y, "k.")
+                plt.xlim(0, max(lags))
                 plt.xlabel("$\mathrm{Time~(days)}$")
                 plt.ylabel("$\mathrm{Normalised~flux}$")
                 plt.subplot(2, 1, 2)
                 plt.plot(lags, acf_smooth, "k")
                 plt.xlabel("$\mathrm{lags~(days)}$")
                 plt.ylabel("$\mathrm{ACF}$")
-                plt.axvline(p, color="m")
+                plt.axvline(period, color="m")
+                plt.xlim(min(lags), max(lags))
+                plt.subplots_adjust(left=.16, bottom=.12, hspace=.4)
                 plt.savefig("results/{}_acf".format(epic))
 
         except IOError:
@@ -92,7 +94,7 @@ def run_kalesalad(N):
     c = str(sys.argv[1])
     fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
     for fn in fns[:N]:
-        run_acf(c, fn, plot=False)
+        run_acf(c, fn, plot=True)
 
 
 if __name__ == "__main__":
@@ -102,7 +104,7 @@ if __name__ == "__main__":
             "You need to delete the old file!"
 
     fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
-#     run_kalesalad(4)
+#     run_kalesalad(100)
 
     pool = Pool()
     pool.map(run_kalesalad_multi, range(len(fns)))

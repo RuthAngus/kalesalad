@@ -116,7 +116,7 @@ if __name__ == "__main__":
 #     k2 = match(EBids, EBperiods, df)
 
     df = get_catalog("k2targets")
-    print(df.keys())
+#     print(df.keys())
 
     k2 = match(myids, periods, df)
 
@@ -145,7 +145,6 @@ if __name__ == "__main__":
     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
     plt.subplots_adjust(bottom=.2)
     plt.savefig("figs/ra_vs_dec_c{0}".format(c))
-    print(k2["dec"][m], k2["ra"][m])
 
     plt.clf()
     age = period2age(k2["period"], k2["bv"])
