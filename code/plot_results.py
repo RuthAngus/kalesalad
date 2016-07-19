@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from download_epic import get_catalog
@@ -130,6 +131,7 @@ if __name__ == "__main__":
 
     plt.clf()
     plt.plot(k2["teff"], k2["logg"], "k.")
+    print("plotting", len(k2["teff"]), "teffs")
     plt.xlim(max(k2["teff"]), min(k2["teff"]))
     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
     plt.ylabel("$\log~(g)~[\log_{10}\mathrm{(cgs)}]$")
@@ -137,21 +139,40 @@ if __name__ == "__main__":
     plt.savefig("figs/teff_vs_logg_c{0}".format(c))
 
     plt.clf()
-    m = (k2["period"] < 45) * (k2["period"] > 0)
+    age = period2age(k2["period"], k2["bv"])
+#     m = (k2["period"] < 45) * (k2["period"] > 0)  # take out bad periods
+    # take out hot stars, bad periods and bad ages.
+    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
+            * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=k2["period"][m],
             edgecolor="", cmap="YlGnBu", s=3)
+    print("plotting", len(k2["dec"][m]), "decs")
     plt.xlabel("$\mathrm{Declination~(degrees)}$")
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
     plt.subplots_adjust(bottom=.2)
-    plt.savefig("figs/ra_vs_dec_c{0}".format(c))
+    plt.savefig("figs/ra_vs_dec_period_c{0}".format(c))
 
     plt.clf()
-    age = period2age(k2["period"], k2["bv"])
+    # take out hot stars, bad periods and bad ages.
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
-            * (age < 13) * np.isfinite(age)
+            * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
+    plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=age[m],
+            edgecolor="", cmap="YlGnBu", s=3)
+    print("plotting", len(k2["dec"][m]), "decs")
+    plt.xlabel("$\mathrm{Declination~(degrees)}$")
+    plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
+    plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
+    plt.subplots_adjust(bottom=.2)
+    plt.savefig("figs/ra_vs_dec_age_c{0}".format(c))
+
+    plt.clf()
+    # take out hot stars, bad periods and bad ages.
+    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
+            * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
     plt.scatter(k2["lon"][m], k2["lat"][m], marker="o", c=age[m],
                 edgecolor="", cmap="RdPu", s=3)
+    print("plotting", len(k2["lat"][m]), "lats")
     plt.xlabel("$\mathrm{Galactic~longitude}$")
     plt.ylabel("$\mathrm{Galactic~latitude}$")
     plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
@@ -159,10 +180,12 @@ if __name__ == "__main__":
     plt.savefig("figs/lon_vs_lat_c{0}".format(c))
 
     plt.clf()
+    # take out bad periods and giants.
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["logg"] > 4.2)
     p = k2["period"][m]
     teff = k2["teff"][m]
     plt.plot(teff, p, "k.", markersize=3)
+    print("plotting", len(p), "periods")
     plt.xlim(max(teff), min(teff))
     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
     plt.ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
