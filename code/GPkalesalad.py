@@ -7,6 +7,7 @@ from simple_acf import simple_acf
 import time
 import emcee
 import h5py
+import matplotlib.pyplot as plt
 
 
 def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
@@ -35,6 +36,10 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
     # subsample
     xsub, ysub, yerrsub = x[::sub], y[::sub], yerr[::sub]
     xb, yb, yerrb = x, y, yerr
+    xb, yb, yerrb = x[:100], y[:100], yerr[:100]
+    plt.clf()
+    plt.plot(xb, yb, "k.")
+    plt.savefig("gptest")
 
     theta_init = np.log([np.exp(-5), np.exp(7), np.exp(.6), np.exp(-16),
                          p_init])
@@ -85,24 +90,18 @@ def recover_injections(id, x, y, yerr, fn, burnin, run, interval, tol,
 
 if __name__ == "__main__":
 
-    ids = np.genfromtxt("2011_ids.txt", dtype=str)
-    p = np.genfromtxt("prefixes.txt", dtype=str)
     c = "01"
-    ids = ["31793"]
-    periods, perr, epics = [], [], []
-    for i, id in enumerate(ids):
-        prefix = str(p)[:4]
-        epic = "{0}{1}".format(prefix, id)
-        path = "data/c01/{0}00000/{1}".format(prefix, id)
-        end = "kepler_v1.0_lc.fits"
-        file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic,
-                                                             c, end)
-        if os.path.exists(file):
-            print(i, "of", len(ids))
-            x, y = process_data(file)
+    epic = "201131793"
+    path = "data/c01/201100000/31793"
+    end = "kepler_v1.0_lc.fits"
+    file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic, c, end)
+    if os.path.exists(file):
+        x, y = process_data(file)
 
-        burnin, run, npts, tol = 100, 1000, 10, .4  # MCMC. max npts is 48
+        burnin, run, npts, tol = 1000, 100000, 10, .4  # MCMC. max npts is 48
         yerr = np.ones_like(y) * 1e-5
         interval = 0.02043365  # assume for long cadence
         recover_injections(id, x, y, yerr, path, burnin, run, interval, tol,
                            npts, nwalkers=12, plot=True)
+    else:
+        print(file, "file not found")

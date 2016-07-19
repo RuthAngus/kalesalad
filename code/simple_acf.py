@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 import emcee
@@ -29,12 +30,23 @@ def simple_acf(x, y):
                                                             (sig**2))
     conv_func = Gaussian(np.arange(-28, 28, 1.), 9.)
     acf_smooth = np.convolve(acf, conv_func, mode='same')
+
+    # just use the second bit (no reflection)
     acf_smooth, lags = acf_smooth[N:], lags[N:]
+
+    # cut it in half
+    m = lags < max(lags)/2.
+    acf_smooth, lags = acf_smooth[m], lags[m]
 
     # ditch the first point
     acf_smooth, lags = acf_smooth[1:], lags[1:]
 
-    peaks, dips, leftdips, rightdips, bigpeaks = find_peaks(acf_smooth, lags)
+#     peaks, dips, leftdips, rightdips, bigpeaks = find_peaks(acf_smooth, lags)
+
+    # find all the peaks
+    peaks = np.array([i for i in range(1, len(lags)-1)
+                     if acf_smooth[i-1] < acf_smooth[i] and
+                     acf_smooth[i+1] < acf_smooth[i]])
 
     # find the first and second peaks
     if len(peaks) > 1:
@@ -48,15 +60,19 @@ def simple_acf(x, y):
         period = np.nan
 
     # find the highest peak
-    m = acf_smooth == max(acf_smooth[peaks])
-    highest_peak = acf_smooth[m][0]
-    period = lags[m][0]
-    print(highest_peak, period)
+    if len(peaks):
+        m = acf_smooth == max(acf_smooth[peaks])
+        highest_peak = acf_smooth[m][0]
+        period = lags[m][0]
+        print(period)
+    else:
+        period = 0.
 
     rvar = np.percentile(y, 95)
 
-    return period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
-        bigpeaks
+#     return period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
+#         bigpeaks
+    return period, acf_smooth, lags, rvar, peaks
 
 
 def find_peaks(acf_smooth, lags, t=.2):

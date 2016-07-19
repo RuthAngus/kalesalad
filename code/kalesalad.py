@@ -48,13 +48,14 @@ def run_acf(c, fn, plot=False):
             x, y = process_data(file)
 
             # compute the acf
-            period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
-                    bigpeaks = simple_acf(x, y)
+#             period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
+#                     bigpeaks = simple_acf(x, y)
+            period, acf_smooth, lags, rvar, peaks = simple_acf(x, y)
 
             # append data to file
             with open("c{0}_periods.txt".format(c), "a") as f:
                 f.write("{0} {1} \n".format(epic, period))
-
+            print(len(lags), len(acf_smooth))
             # make a plot
             if plot:
                 plt.clf()
@@ -94,7 +95,7 @@ def run_kalesalad(N):
     c = str(sys.argv[1])
     fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
     for fn in fns[:N]:
-        run_acf(c, fn, plot=True)
+        run_acf(c, fn, plot=False)
 
 
 if __name__ == "__main__":

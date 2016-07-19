@@ -43,7 +43,7 @@ def match(myids, myperiods, df, no_binaries=True):
     for i in range(len(myids)):
 
         if no_binaries:  # if the target is a binary, skip it (leave a zero)
-            if len(id == ebids):
+            if any(myids[i] == ebids):
                 bv[i], bverr[i], teff[i], tefferr1[i] = 0, 0, 0, 0
                 tefferr2[i], ra[i], raerr[i], dec[i], decerr[i] = 0, 0, 0, 0, 0
                 logg[i], loggerr1[i], loggerr2[i] = 0, 0, 0
@@ -104,12 +104,13 @@ if __name__ == "__main__":
 
     c = str(sys.argv[1])
 
-    if c == "01":  # combine all campaign 1 data
-        prefixes = ["2011", "2012", "2013", "2014", "2015", "2016", "2017",
-                    "2018", "2019", "2102"]
-        myids, periods, err = combine_campaign_data(c, prefixes)
-    else:
-        myids, periods = np.genfromtxt("c{0}_periods.txt".format(c)).T
+#     if c == "01":  # combine all campaign 1 data
+#         prefixes = ["2011", "2012", "2013", "2014", "2015", "2016", "2017",
+#                     "2018", "2019", "2102"]
+#         myids, periods, err = combine_campaign_data(c, prefixes)
+#     else:
+
+    myids, periods = np.genfromtxt("c{0}_periods.txt".format(c)).T
 
     # plot armstrong data
 #     data = np.genfromtxt("data/EB_catalog_periods.txt", skip_header=65).T
@@ -142,10 +143,11 @@ if __name__ == "__main__":
     age = period2age(k2["period"], k2["bv"])
 #     m = (k2["period"] < 45) * (k2["period"] > 0)  # take out bad periods
     # take out hot stars, bad periods and bad ages.
-    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
-            * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
+    m = (k2["period"] < 45) * (k2["period"] > 0)
+#     * (k2["bv"]>.4) * (age > 0) \
+#             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=k2["period"][m],
-            edgecolor="", cmap="YlGnBu", s=3)
+            edgecolor="", cmap="YlGnBu", s=18, alpha=.5)
     print("plotting", len(k2["dec"][m]), "decs")
     plt.xlabel("$\mathrm{Declination~(degrees)}$")
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
@@ -158,7 +160,7 @@ if __name__ == "__main__":
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=age[m],
-            edgecolor="", cmap="YlGnBu", s=3)
+            edgecolor="", cmap="YlGnBu", s=18, alpha=.5)
     print("plotting", len(k2["dec"][m]), "decs")
     plt.xlabel("$\mathrm{Declination~(degrees)}$")
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
