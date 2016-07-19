@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from download_epic import get_catalog
 import os
+import sys
 
 
 def period2age(period, bv):
@@ -100,13 +101,16 @@ def combine_campaign_data(c, prefixes):
 
 if __name__ == "__main__":
 
-    # combine all campaign 1 data
-    c = "01"
-    prefixes = ["2011", "2012", "2013", "2014", "2015", "2016", "2017",
-                "2018", "2019", "2102"]
-#     prefixes = ["2011"]
-    myids, periods, err = combine_campaign_data(c, prefixes)
+    c = str(sys.argv[1])
 
+    if c == "01":  # combine all campaign 1 data
+        prefixes = ["2011", "2012", "2013", "2014", "2015", "2016", "2017",
+                    "2018", "2019", "2102"]
+        myids, periods, err = combine_campaign_data(c, prefixes)
+    else:
+        myids, periods = np.genfromtxt("c{0}_periods.txt".format(c)).T
+
+    # plot armstrong data
 #     data = np.genfromtxt("data/EB_catalog_periods.txt", skip_header=65).T
 #     EBids, EBperiods = data[0], data[3]
 #     k2 = match(EBids, EBperiods, df)
@@ -130,7 +134,7 @@ if __name__ == "__main__":
     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
     plt.ylabel("$\log~(g)~[\log_{10}\mathrm{(cgs)}]$")
     plt.ylim(0, 6)
-    plt.savefig("figs/teff_vs_logg")
+    plt.savefig("figs/teff_vs_logg_c{0}".format(c))
 
     plt.clf()
     m = (k2["period"] < 45) * (k2["period"] > 0)
@@ -140,7 +144,8 @@ if __name__ == "__main__":
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
     plt.subplots_adjust(bottom=.2)
-    plt.savefig("figs/ra_vs_dec")
+    plt.savefig("figs/ra_vs_dec_c{0}".format(c))
+    print(k2["dec"][m], k2["ra"][m])
 
     plt.clf()
     age = period2age(k2["period"], k2["bv"])
@@ -150,10 +155,9 @@ if __name__ == "__main__":
                 edgecolor="", cmap="RdPu", s=3)
     plt.xlabel("$\mathrm{Galactic~longitude}$")
     plt.ylabel("$\mathrm{Galactic~latitude}$")
-#     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
     plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
     plt.subplots_adjust(bottom=.2)
-    plt.savefig("figs/lon_vs_lat")
+    plt.savefig("figs/lon_vs_lat_c{0}".format(c))
 
     plt.clf()
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["logg"] > 4.2)
@@ -165,4 +169,4 @@ if __name__ == "__main__":
     plt.ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
     plt.yscale("log")
     plt.subplots_adjust(left=.2)
-    plt.savefig("figs/period_vs_bv")
+    plt.savefig("figs/period_vs_bv_c{0}".format(c))

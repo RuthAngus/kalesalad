@@ -24,7 +24,6 @@ def process_data(file):
     id (str): the 4 digit number at the end of the epic id, e.g. "26368".
     c (str): campaign. e.g. "01"
     """
-
     hdulist = pyfits.open(file)
     time, flux = hdulist[1].data["TIME"], hdulist[1].data["FLUX"]
     out = hdulist[1].data["OUTLIER"]
@@ -45,30 +44,34 @@ def run_acf(c, fn, plot=False):
     file = "data/c{0}/{1}".format(c, fn)
 
     if os.path.exists(file):
-        x, y = process_data(file)
+        try:
+            x, y = process_data(file)
 
-        # compute the acf
-        period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
-                bigpeaks = simple_acf(x, y)
+            # compute the acf
+            period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
+                    bigpeaks = simple_acf(x, y)
 
-        # append data to file
-        with open("c{0}_periods.txt".format(c), "a") as f:
-            f.write("{0} {1} \n".format(epic, period))
+            # append data to file
+            with open("c{0}_periods.txt".format(c), "a") as f:
+                f.write("{0} {1} \n".format(epic, period))
 
-        # make a plot
-        if plot:
-            plt.clf()
-            plt.subplot(2, 1, 1)
-            plt.plot(x, y, "k.")
-            plt.xlim(min(x), max(x))
-            plt.xlabel("$\mathrm{Time~(days)}$")
-            plt.ylabel("$\mathrm{Normalised~flux}$")
-            plt.subplot(2, 1, 2)
-            plt.plot(lags, acf_smooth, "k")
-            plt.xlabel("$\mathrm{lags~(days)}$")
-            plt.ylabel("$\mathrm{ACF}$")
-            plt.axvline(p, color="m")
-            plt.savefig("results/{}_acf".format(epic))
+            # make a plot
+            if plot:
+                plt.clf()
+                plt.subplot(2, 1, 1)
+                plt.plot(x, y, "k.")
+                plt.xlim(min(x), max(x))
+                plt.xlabel("$\mathrm{Time~(days)}$")
+                plt.ylabel("$\mathrm{Normalised~flux}$")
+                plt.subplot(2, 1, 2)
+                plt.plot(lags, acf_smooth, "k")
+                plt.xlabel("$\mathrm{lags~(days)}$")
+                plt.ylabel("$\mathrm{ACF}$")
+                plt.axvline(p, color="m")
+                plt.savefig("results/{}_acf".format(epic))
+
+        except IOError:
+            print("Bad file", file)
     else:
         print(file, "file not found")
 
@@ -99,7 +102,7 @@ if __name__ == "__main__":
             "You need to delete the old file!"
 
     fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
-    run_kalesalad(10)
+#     run_kalesalad(4)
 
-#     pool = Pool()
-#     pool.map(run_kalesalad_multi, range(len(fns)))
+    pool = Pool()
+    pool.map(run_kalesalad_multi, range(len(fns)))

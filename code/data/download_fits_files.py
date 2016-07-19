@@ -5,7 +5,7 @@ from download_epic import get_catalog
 import sys
 
 def get_fits(c, df):
-    ids = df.epic_number
+    ids = df.epic_number[df.k2_campaign_str=="{}".format(int(c))]
     print(ids)
     prefixes = [str(i)[:4] for i in ids]
     suffixes = [str(i)[4:] for i in ids]
