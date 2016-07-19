@@ -34,75 +34,72 @@ def process_data(file):
     return x, y
 
 
-def run_acf(c, p, plot=False):
+def run_acf(c, fn, plot=False):
     """
-    Run the ACF on all light curves in the specified campaign, with the
-    specified prefix.
+    Run the ACF on a light curve in the specified campaign.
     c (str): campaign, e.g. "c01".
-    p (int): prefix, e.g. 2011.
-    ids (np.array of ints): list of epic ids (9 digits).
+    fn (str): fits file name for a target in campaign c.
     """
 
-    assert os.path.exists("c{0}_{1}_periods.txt".format(c, str(p)[:4])) == \
-            False, "You need to delete the old file!"
+    epic = fn[20:29]
+    file = "data/c{0}/{1}".format(c, fn)
 
-    ids = np.genfromtxt("{0}_ids.txt".format(str(p)[:4]), dtype=str)
+    if os.path.exists(file):
+        x, y = process_data(file)
 
-    for i, id in enumerate(ids):
+        # compute the acf
+        period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
+                bigpeaks = simple_acf(x, y)
 
-        prefix = str(p)[:4]
-        epic = "{0}{1}".format(prefix, id)
-        path = "data/c{0}/{1}00000/{2}".format(c, prefix, id)
-        end = "kepler_v1.0_lc.fits"
-        file = "{0}/hlsp_everest_k2_llc_{1}-c{2}_{3}".format(path, epic,
-                                                                c, end)
+        # append data to file
+        with open("c{0}_periods.txt".format(c), "a") as f:
+            f.write("{0} {1} \n".format(epic, period))
 
-        if os.path.exists(file):
-            print(i, "of", len(ids))
-            x, y = process_data(file)
-
-            # compute the acf
-#             acf_smooth, lags, period, err, locheight = corr_run(x, y)
-            period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
-                    bigpeaks = simple_acf(x, y)
-            err = 0
-
-            # append data to file
-            with open("c{0}_{1}_periods.txt".format(c, prefix), "a") as f:
-                f.write("{0} {1} {2} \n".format(epic, period, err))
-
-            # make a plot
-            if plot:
-#                 p = period
-                plt.clf()
-                plt.subplot(2, 1, 1)
-                plt.plot(x, y, "k.")
-                plt.xlim(min(x), max(x))
-                plt.xlabel("$\mathrm{Time~(days)}$")
-                plt.ylabel("$\mathrm{Normalised~flux}$")
-                plt.subplot(2, 1, 2)
-                plt.plot(lags, acf_smooth, "k")
-#                 plt.xlabel("$\mathrm{lags~(days)}$")
-#                 plt.ylabel("$\mathrm{ACF}$")
-#                 plt.axvline(p, color="m")
-#                             label="${0:.2f}$".format(p))
-#                 plt.legend(loc="best")
-                plt.savefig("results/{}_acf".format(epic))
-        else:
-            print(file, "file not found")
+        # make a plot
+        if plot:
+            plt.clf()
+            plt.subplot(2, 1, 1)
+            plt.plot(x, y, "k.")
+            plt.xlim(min(x), max(x))
+            plt.xlabel("$\mathrm{Time~(days)}$")
+            plt.ylabel("$\mathrm{Normalised~flux}$")
+            plt.subplot(2, 1, 2)
+            plt.plot(lags, acf_smooth, "k")
+            plt.xlabel("$\mathrm{lags~(days)}$")
+            plt.ylabel("$\mathrm{ACF}$")
+            plt.axvline(p, color="m")
+            plt.savefig("results/{}_acf".format(epic))
+    else:
+        print(file, "file not found")
 
 
-def run_kalesalad(index):
+def run_kalesalad_multi(index):
     """
-    Measure all rotation periods in campaign 1 using parallel processing
+    Measure all rotation periods in a campaign using parallel processing.
+    Iterate over fits file names.
     """
     c = str(sys.argv[1])
-    p = np.genfromtxt("c{0}_prefixes.txt".format(c), dtype=str)
-    run_acf(c, p[index], plot=False)
+    fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
+    run_acf(c, fns[index], plot=False)
+
+def run_kalesalad(N):
+    """
+    Measure all rotation periods in a campaign - non parallel (for tests).
+    """
+    c = str(sys.argv[1])
+    fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
+    for fn in fns[:N]:
+        run_acf(c, fn, plot=False)
 
 
 if __name__ == "__main__":
     c = str(sys.argv[1])
-    N = len(np.genfromtxt("c{0}_prefixes.txt".format(c), dtype=str))
-    pool = Pool()
-    pool.map(run_kalesalad, range(N))
+
+    assert os.path.exists("c{0}_periods.txt".format(c)) == False, \
+            "You need to delete the old file!"
+
+    fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
+    run_kalesalad(10)
+
+#     pool = Pool()
+#     pool.map(run_kalesalad_multi, range(len(fns)))
