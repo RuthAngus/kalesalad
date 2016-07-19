@@ -24,9 +24,10 @@ def process_data(file):
     id (str): the 4 digit number at the end of the epic id, e.g. "26368".
     c (str): campaign. e.g. "01"
     """
-    hdulist = pyfits.open(file)
-    time, flux = hdulist[1].data["TIME"], hdulist[1].data["FLUX"]
-    out = hdulist[1].data["OUTLIER"]
+    with pyfits.open(file) as hdulist:
+        time, flux = hdulist[1].data["TIME"], hdulist[1].data["FLUX"]
+        out = hdulist[1].data["OUTLIER"]
+
     m = np.isfinite(time) * np.isfinite(flux) * (out < 1)
     x, med = time[m], np.median(flux[m])
     y = flux[m]/med - 1  # median normalise
@@ -43,50 +44,42 @@ def run_acf(c, fn, plot=False):
     epic = fn[20:29]
     file = "data/c{0}/{1}".format(c, fn)
 
-    if os.path.exists(file):
-        try:
-            x, y = process_data(file)
+    if not os.path.exists(file):
+        print(file, "file not found")
+        return None
 
-            # compute the acf
+    try:
+        x, y = process_data(file)
+
 #             period, acf_smooth, lags, rvar, peaks, dips, leftdips, rightdips, \
 #                     bigpeaks = simple_acf(x, y)
-            period, acf_smooth, lags, rvar, peaks = simple_acf(x, y)
 
-            # append data to file
-            with open("c{0}_periods.txt".format(c), "a") as f:
-                f.write("{0} {1} \n".format(epic, period))
-            print(len(lags), len(acf_smooth))
-            # make a plot
-            if plot:
-                plt.clf()
-                plt.subplot(2, 1, 1)
-                plt.plot(x-x[0], y, "k.")
-                plt.xlim(0, max(lags))
-                plt.xlabel("$\mathrm{Time~(days)}$")
-                plt.ylabel("$\mathrm{Normalised~flux}$")
-                plt.subplot(2, 1, 2)
-                plt.plot(lags, acf_smooth, "k")
-                plt.xlabel("$\mathrm{lags~(days)}$")
-                plt.ylabel("$\mathrm{ACF}$")
-                plt.axvline(period, color="m")
-                plt.xlim(min(lags), max(lags))
-                plt.subplots_adjust(left=.16, bottom=.12, hspace=.4)
-                plt.savefig("results/{}_acf".format(epic))
+    except (IOError, ValueError):
+        print("Bad file", file)
+        return None
 
-        except IOError:
-            print("Bad file", file)
-    else:
-        print(file, "file not found")
+    # compute the acf
+    period, acf_smooth, lags, rvar, peaks = simple_acf(x, y)
 
+    # make a plot
+    if plot:
+        plt.clf()
+        plt.subplot(2, 1, 1)
+        plt.plot(x-x[0], y, "k.")
+        plt.xlim(0, max(lags))
+        plt.xlabel("$\mathrm{Time~(days)}$")
+        plt.ylabel("$\mathrm{Normalised~flux}$")
+        plt.subplot(2, 1, 2)
+        plt.plot(lags, acf_smooth, "k")
+        plt.xlabel("$\mathrm{lags~(days)}$")
+        plt.ylabel("$\mathrm{ACF}$")
+        plt.axvline(period, color="m")
+        plt.xlim(min(lags), max(lags))
+        plt.subplots_adjust(left=.16, bottom=.12, hspace=.4)
+        plt.savefig("results/{}_acf".format(epic))
 
-def run_kalesalad_multi(index):
-    """
-    Measure all rotation periods in a campaign using parallel processing.
-    Iterate over fits file names.
-    """
-    c = str(sys.argv[1])
-    fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
-    run_acf(c, fns[index], plot=False)
+    return epic, period
+
 
 def run_kalesalad(N):
     """
@@ -99,13 +92,21 @@ def run_kalesalad(N):
 
 
 if __name__ == "__main__":
+    from functools import partial
     c = str(sys.argv[1])
 
-    assert os.path.exists("c{0}_periods.txt".format(c)) == False, \
-            "You need to delete the old file!"
+    open("c{0}_periods.txt".format(c), "w")
 
     fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
 #     run_kalesalad(100)
 
+    f = partial(run_acf, c)
+
     pool = Pool()
-    pool.map(run_kalesalad_multi, range(len(fns)))
+    for val in pool.map(f, fns):
+        if val is None:
+            continue
+        epic, period = val
+        # append data to file
+        with open("c{0}_periods.txt".format(c), "a") as f:
+            f.write("{0} {1} \n".format(epic, period))

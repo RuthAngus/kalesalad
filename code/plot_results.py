@@ -147,7 +147,7 @@ if __name__ == "__main__":
 #     * (k2["bv"]>.4) * (age > 0) \
 #             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=k2["period"][m],
-            edgecolor="", cmap="YlGnBu", s=18, alpha=.5)
+            edgecolor="", cmap="YlGnBu", s=18)
     print("plotting", len(k2["dec"][m]), "decs")
     plt.xlabel("$\mathrm{Declination~(degrees)}$")
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=age[m],
-            edgecolor="", cmap="YlGnBu", s=18, alpha=.5)
+            edgecolor="", cmap="YlGnBu", s=18)
     print("plotting", len(k2["dec"][m]), "decs")
     plt.xlabel("$\mathrm{Declination~(degrees)}$")
     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
