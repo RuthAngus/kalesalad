@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from download_epic import get_catalog
 import os
 import sys
+from matplotlib.ticker import NullFormatter
 
 
 def period2age(period, bv):
@@ -130,89 +131,121 @@ if __name__ == "__main__":
                'text.usetex': True}
     plt.rcParams.update(plotpar)
 
-    plt.clf()
-    plt.plot(k2["teff"], k2["logg"], "k.")
-    print("plotting", len(k2["teff"]), "teffs")
-    plt.xlim(max(k2["teff"]), min(k2["teff"]))
-    plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
-    plt.ylabel("$\log~(g)~[\log_{10}\mathrm{(cgs)}]$")
-    plt.ylim(0, 6)
-    plt.savefig("figs/teff_vs_logg_c{0}".format(c))
-
-    plt.clf()
-    age = period2age(k2["period"], k2["bv"])
-#     m = (k2["period"] < 45) * (k2["period"] > 0)  # take out bad periods
-    # take out hot stars, bad periods and bad ages.
-    m = (k2["period"] < 45) * (k2["period"] > 0)
-#     * (k2["bv"]>.4) * (age > 0) \
+#     plt.clf()
+#     plt.plot(k2["teff"], k2["logg"], "k.")
+#     print("plotting", len(k2["teff"]), "teffs")
+#     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
+#     plt.ylabel("$\log~(g)~[\log_{10}\mathrm{(cgs)}]$")
+#     plt.xlim(7500, 1800)
+#     plt.ylim(6, 0)
+#     plt.savefig("figs/teff_vs_logg_c{0}".format(c))
+#
+#     plt.clf()
+#     age = period2age(k2["period"], k2["bv"])
+# #     m = (k2["period"] < 45) * (k2["period"] > 0)  # take out bad periods
+#     # take out hot stars, bad periods and bad ages.
+#     m = (k2["period"] < 45) * (k2["period"] > 0)
+# #     * (k2["bv"]>.4) * (age > 0) \
+# #             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
+#     plt.scatter(k2["ra"][m], k2["dec"][m], marker="o", c=k2["period"][m],
+#             edgecolor="", cmap="viridis", s=5, vmin=0, vmax=40)
+#     print("plotting", len(k2["dec"][m]), "decs")
+#     plt.ylabel("$\mathrm{Declination~(degrees)}$")
+#     plt.xlabel("$\mathrm{Right~Ascension~(degrees)}$")
+#     plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
+#     plt.subplots_adjust(bottom=.2)
+#     middec = .5*(min(k2["dec"]) + max(k2["dec"]))
+#     plt.ylim(middec - 9, middec + 9)
+#     plt.savefig("figs/ra_vs_dec_period_c{0}".format(c))
+#
+#     plt.clf()
+#     plt.hist(k2["period"][m], histtype="stepfilled", color="w")
+#     plt.ylabel("$\mathrm{N}$")
+#     plt.xlabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
+# #     plt.title("Lat = {0}, long = {1}".format(.5*(min(k2["lat"]) +
+# #               max(k2["lat"])), .5*(min(k2["lon"]) + max(k2["lon"]))))
+#     plt.xlim(0, 40)
+#     plt.savefig("figs/period_hist_c{0}".format(c))
+#
+#     plt.clf()
+#     # take out hot stars, bad periods and bad ages.
+#     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
 #             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
-    plt.scatter(k2["ra"][m], k2["dec"][m], marker="o", c=k2["period"][m],
-            edgecolor="", cmap="viridis", s=5, vmin=0, vmax=40)
-    print("plotting", len(k2["dec"][m]), "decs")
-    plt.ylabel("$\mathrm{Declination~(degrees)}$")
-    plt.xlabel("$\mathrm{Right~Ascension~(degrees)}$")
-    plt.colorbar(label="$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
-    plt.subplots_adjust(bottom=.2)
-    middec = .5*(min(k2["dec"]) + max(k2["dec"]))
-    plt.ylim(middec - 9, middec + 9)
-    plt.savefig("figs/ra_vs_dec_period_c{0}".format(c))
+#     plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=age[m],
+#             edgecolor="", cmap="viridis", s=3)
+#     print("plotting", len(k2["dec"][m]), "decs")
+#     plt.xlabel("$\mathrm{Declination~(degrees)}$")
+#     plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
+#     plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
+#     plt.subplots_adjust(bottom=.2)
+#     plt.xlim(middec - 9, middec + 9)
+#     plt.savefig("figs/ra_vs_dec_age_c{0}".format(c))
+#
+#     plt.clf()
+#     plt.hist(age[m], histtype="stepfilled", color="w")
+#     plt.ylabel("$\mathrm{N}$")
+#     plt.xlabel("$\mathrm{Age (Gyr)}$")
+#     plt.xlim(0, 13.7)
+#     plt.title("Lat = {0}, long = {1}".format(.5*(min(k2["lat"]) +
+#               max(k2["lat"])), .5*(min(k2["lon"]) + max(k2["lon"]))))
+#     plt.savefig("figs/age_hist_c{0}".format(c))
+#
+#
+#     plt.clf()
+#     # take out hot stars, bad periods and bad ages.
+#     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
+#             * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
+#     plt.scatter(k2["lon"][m], k2["lat"][m], marker="o", c=age[m],
+#                 edgecolor="", cmap="RdPu", s=3)
+#     print("plotting", len(k2["lat"][m]), "lats")
+#     plt.xlabel("$\mathrm{Galactic~longitude}$")
+#     plt.ylabel("$\mathrm{Galactic~latitude}$")
+#     plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
+#     plt.subplots_adjust(bottom=.2)
+#     plt.savefig("figs/lon_vs_lat_c{0}".format(c))
 
     plt.clf()
-    plt.hist(k2["period"][m], histtype="stepfilled", color="w")
-    plt.ylabel("$\mathrm{N}$")
-    plt.xlabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
-    plt.title("Lat = {0}, long = {1}".format(.5*(min(k2["lat"]) +
-              max(k2["lat"])), .5*(min(k2["lon"]) + max(k2["lon"]))))
-    plt.xlim(0, 40)
-    plt.savefig("figs/period_hist_c{0}".format(c))
+    left, width = .1, .65
+    bottom, height = .1, .65
+    bottom_h = left_h = left + width + .02
+    rect_scatter = [left, bottom, width, height]
+    rect_histx = [left, bottom_h, width, .2]
+    rect_histy = [left_h, bottom, .2, height]
+    plt.figure(1, figsize=(8, 8))
+    axScatter = plt.axes(rect_scatter)
+    axHistx = plt.axes(rect_histx)
+    axHisty = plt.axes(rect_histy)
+    nullfmt = NullFormatter()
+    axHistx.xaxis.set_major_formatter(nullfmt)
+    axHisty.yaxis.set_major_formatter(nullfmt)
 
-    plt.clf()
-    # take out hot stars, bad periods and bad ages.
-    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
-            * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
-    plt.scatter(k2["dec"][m], k2["ra"][m], marker="o", c=age[m],
-            edgecolor="", cmap="viridis", s=3)
-    print("plotting", len(k2["dec"][m]), "decs")
-    plt.xlabel("$\mathrm{Declination~(degrees)}$")
-    plt.ylabel("$\mathrm{Right~Ascension~(degrees)}$")
-    plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
-    plt.subplots_adjust(bottom=.2)
-    plt.xlim(middec - 9, middec + 9)
-    plt.savefig("figs/ra_vs_dec_age_c{0}".format(c))
-
-    plt.clf()
-    plt.hist(age[m], histtype="stepfilled", color="w")
-    plt.ylabel("$\mathrm{N}$")
-    plt.xlabel("$\mathrm{Age (Gyr)}$")
-    plt.xlim(0, 13.7)
-    plt.title("Lat = {0}, long = {1}".format(.5*(min(k2["lat"]) +
-              max(k2["lat"])), .5*(min(k2["lon"]) + max(k2["lon"]))))
-    plt.savefig("figs/age_hist_c{0}".format(c))
-
-
-    plt.clf()
-    # take out hot stars, bad periods and bad ages.
-    m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["bv"]>.4) * (age > 0) \
-            * (age < 13) * np.isfinite(age) * (k2["logg"] > 4.2)
-    plt.scatter(k2["lon"][m], k2["lat"][m], marker="o", c=age[m],
-                edgecolor="", cmap="RdPu", s=3)
-    print("plotting", len(k2["lat"][m]), "lats")
-    plt.xlabel("$\mathrm{Galactic~longitude}$")
-    plt.ylabel("$\mathrm{Galactic~latitude}$")
-    plt.colorbar(label="$\mathrm{Age~(Gyr)}$")
-    plt.subplots_adjust(bottom=.2)
-    plt.savefig("figs/lon_vs_lat_c{0}".format(c))
-
-    plt.clf()
     # take out bad periods and giants.
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["logg"] > 4.2)
     p = k2["period"][m]
     teff = k2["teff"][m]
-    plt.plot(teff, p, "k.", markersize=3)
+    axScatter.scatter(teff, p, c="k", s=3)
+    axScatter.set_xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
+    axScatter.set_ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
+    axScatter.set_xlim(2000, 7000)
+    axScatter.set_ylim(0, 45)
     print("plotting", len(p), "periods")
-    plt.xlim(max(teff), min(teff))
-    plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
-    plt.ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
-    plt.yscale("log")
-    plt.subplots_adjust(left=.2)
+
+#     binwidth = .25
+#     xymax = np.max( [np.max(np.fabs(teff)), np.max(np.fabs(p))] )
+#     lim = (int(xymax/binwidth) + 1) * binwidth
+#     axScatter.set_xlim((-lim, lim))
+#     axScatter.set_ylim((-lim, lim))
+#     bins = np.arange(-lim, lim + binwidth, binwidth)
+#     axHistx.hist(teff, bins=bins)
+#     axHisty.hist(p, bins=bins, orientation="horizontal")
+#     axHistx.set_xlim(axScatter.get_xlim())
+#     axHisty.set_ylim(axScatter.get_ylim())
+    axHistx.hist(teff, histtype="stepfilled", color="w")
+    axHisty.hist(p, histtype="stepfilled", color="w", orientation="horizontal")
+
+#     plt.xlim(max(teff), min(teff))
+#     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
+#     plt.ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
+#     plt.yscale("log")
+#     plt.subplots_adjust(left=.2)
     plt.savefig("figs/period_vs_bv_c{0}".format(c))
