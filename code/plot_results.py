@@ -217,7 +217,9 @@ if __name__ == "__main__":
     axHisty = plt.axes(rect_histy)
     nullfmt = NullFormatter()
     axHistx.xaxis.set_major_formatter(nullfmt)
+    axHistx.yaxis.set_major_formatter(nullfmt)
     axHisty.yaxis.set_major_formatter(nullfmt)
+    axHisty.xaxis.set_major_formatter(nullfmt)
 
     # take out bad periods and giants.
     m = (k2["period"] < 45) * (k2["period"] > 0) * (k2["logg"] > 4.2)
@@ -226,8 +228,8 @@ if __name__ == "__main__":
     axScatter.scatter(teff, p, c="k", s=3)
     axScatter.set_xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
     axScatter.set_ylabel("$\mathrm{P}_{\mathrm{rot}}~\mathrm{(days)}$")
-    axScatter.set_xlim(2000, 7000)
-    axScatter.set_ylim(0, 45)
+    axScatter.set_xlim(7000, 2000)
+    axScatter.set_ylim(0, 41)
     print("plotting", len(p), "periods")
 
 #     binwidth = .25
@@ -240,8 +242,11 @@ if __name__ == "__main__":
 #     axHisty.hist(p, bins=bins, orientation="horizontal")
 #     axHistx.set_xlim(axScatter.get_xlim())
 #     axHisty.set_ylim(axScatter.get_ylim())
+
     axHistx.hist(teff, histtype="stepfilled", color="w")
     axHisty.hist(p, histtype="stepfilled", color="w", orientation="horizontal")
+    axHistx.set_xlim(7000, 2000)
+    axHisty.set_ylim(0, 41)
 
 #     plt.xlim(max(teff), min(teff))
 #     plt.xlabel("$\mathrm{T}_{\mathrm{eff}}~\mathrm{(K)}$")
