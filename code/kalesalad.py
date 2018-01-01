@@ -1,3 +1,6 @@
+# Uses acf method to measure rotation periods for downloaded everest light
+# curves.
+
 from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +10,7 @@ import os
 from simple_acf import simple_acf
 import sys
 from multiprocessing import Pool
+import pandas as pd
 
 plotpar = {'axes.labelsize': 20,
            'text.fontsize': 20,
@@ -86,7 +90,8 @@ def run_kalesalad(N):
     Measure all rotation periods in a campaign - non parallel (for tests).
     """
     c = str(sys.argv[1])
-    fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
+    df = pd.read_csv("c{}_targets.txt".format(c.zfill(2)), dtype=str)
+    fns = df["epid"].values
     for fn in fns[:N]:
         run_acf(c, fn, plot=False)
 
@@ -97,8 +102,11 @@ if __name__ == "__main__":
 
     open("c{0}_periods.txt".format(c), "w")
 
-    fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
-#     run_kalesalad(100)
+    # fns = np.genfromtxt("c{0}_targets.txt".format(c), dtype=str).T
+    print("c{}_targets.txt".format(c.zfill(2)))
+
+    run_kalesalad(2)
+    assert 0
 
     f = partial(run_acf, c)
 
