@@ -81,14 +81,27 @@ class prot(object):
 
         Adds self.pgram_period, self.pgram_period.err, self.pgram and self.ps.
         """
-
         pgram_fname = "pgrams/{}_pgram".format(self.kepid)
         if not os.path.exists("pgrams"):
             os.mkdir("pgrams")
+
+        # Fit and remove a straight line
+        sx = self.x - self.x[0]
+        AT = np.vstack((sx, np.ones_like(sx)))
+        ATA = np.dot(AT, AT.T)
+        m, c = np.linalg.solve(ATA, np.dot(AT, self.y))
+        self.y -= m*sx + c
+
+        # Renormalise
+        med = np.median(self.y)
+        self.y = self.y/med - 1
+        self.yerr = self.yerr/med
+
         if clobber:
             freq = np.linspace(1./cutoff, 1./.1, 100000)
             ps = 1./freq
 
+            # Filter data
             if filter_period:
                 filter_period = filter_period  # days
                 fs = 1./(self.x[1] - self.x[0])
@@ -143,6 +156,8 @@ class prot(object):
             pl.clf()
             pl.subplot(2, 1, 1)
             pl.plot(self.x-self.x[0], self.y, "k.", ms=3)
+            # pl.plot(self.x - self.x[0], m*(self.x - self.x[0]) + c)
+            # pl.plot(self.x - self.x[0], self.y - m*(self.x - self.x[0]) + c)
             pl.xlim(0, 50)
             pl.title("Period = {0:.2f} days".format(pgram_period))
             pl.subplot(2, 1, 2)
