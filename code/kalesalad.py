@@ -44,7 +44,7 @@ def sigma_clip(y, nsigma=3, npoints=100):
     return filtered_y
 
 
-def process_data(file):
+def process_data(file, c):
     """
     Read the lightcurve from the fits format and sigma clip.
     prefix (str): the 4 digit number at the beginning of the epic id, e.g.
@@ -61,19 +61,13 @@ def process_data(file):
     y = flux[m]/med - 1  # median normalise
     yerr = np.ones_like(y) * 1e-5
 
+    if c == "1":
+        cut = 100
+        x, y, yerr = x[cut:], y[cut:], yerr[cut:]
+
     # Sigma clip
-    # y = np.random.randn(len(x))
-    # inds = np.random.choice(range(len(x)), 100)
-    # y[inds] = np.random.randn(len(y[inds])) * 5
-
-    # plt.clf()
-    # plt.plot(x, y, "k.")
-
     filtered_y = sigma_clip(y)
     m = np.nonzero(np.in1d(y, filtered_y))[0]
-
-    # plt.plot(x[m], y[m], "r.")
-    # plt.savefig("test")
 
     return x[m], y[m], yerr[m]
 
@@ -99,7 +93,7 @@ def run_acf(c, epic, clobber=False, plot=True):
         print(file, "file not found")
         return None
     try:
-        x, y, yerr = process_data(file)
+        x, y, yerr = process_data(file, c=c)
     except (IOError, ValueError):
         print("Bad file", file)
         return None
@@ -138,7 +132,7 @@ def run_kalesalad(c, N, clobber=False):
     """
     todays_date = datetime.date.today()
     results_file = "c{0}_periods_{1}.txt".format(c, todays_date)
-    assert not os.path.exists(results_file), "Old data file found, delete" \
+    assert not os.path.exists(results_file), "Old data file found, delete " \
         "before proceeding"
     with open(results_file, "a") as f:
         f.write("{0} {1} {2} {3}\n".format("epic_id", "ACF_period",
@@ -160,7 +154,7 @@ def run_kalesalad(c, N, clobber=False):
         # Load time and flux
         if os.path.exists(file):
             try:
-                x, y, yerr = process_data(file)
+                x, y, yerr = process_data(file, c=c)
             except (IOError, ValueError):
                 print("Bad file", file)
                 return None
