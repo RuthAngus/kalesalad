@@ -11,7 +11,7 @@ import sys
 from multiprocessing import Pool
 import pandas as pd
 import glob
-import scipy.stats as sps
+import astropy.stats as sps
 import rotation as ro
 import datetime
 
@@ -22,6 +22,27 @@ plotpar = {'axes.labelsize': 20,
            'ytick.labelsize': 20,
            'text.usetex': True}
 plt.rcParams.update(plotpar)
+
+
+def sigma_clip(y, nsigma=3, npoints=100):
+    """
+    Sigma clipping for light curves.
+    """
+    new_y = []
+    x = np.linspace(0, 100, len(y))
+    for i in range(int(len(y)/npoints)):
+        # section = y[i:i + npoints]
+        section = y[i*npoints:(i + 1)*npoints]
+        med, std = np.median(section), np.std(section)
+        mask = (med - nsigma*std < section) * (section < med + nsigma*std)
+        new_y.append(section[mask])
+    last_bit = y[(i+1)*npoints:]
+    med, std = np.median(last_bit), np.std(last_bit)
+    mask = (med - nsigma*std < last_bit) * (last_bit < med + nsigma*std)
+    new_y.append(last_bit[mask])
+    filtered_y = np.array([i for j in new_y for i in j])
+    return filtered_y
+
 
 def process_data(file):
     """
@@ -41,13 +62,23 @@ def process_data(file):
     yerr = np.ones_like(y) * 1e-5
 
     # Sigma clip
-    filtered_y = sps.sigmaclip(y, 2)[0]
+    # y = np.random.randn(len(x))
+    # inds = np.random.choice(range(len(x)), 100)
+    # y[inds] = np.random.randn(len(y[inds])) * 5
 
+    # plt.clf()
+    # plt.plot(x, y, "k.")
+
+    filtered_y = sigma_clip(y)
     m = np.nonzero(np.in1d(y, filtered_y))[0]
+
+    # plt.plot(x[m], y[m], "r.")
+    # plt.savefig("test")
+
     return x[m], y[m], yerr[m]
 
 
-def run_acf(c, epic, clobber, plot=True):
+def run_acf(c, epic, clobber=False, plot=True):
     """
     Run the ACF on a light curve in the specified campaign.
     FOR PARALLEL RUNS.
@@ -95,7 +126,8 @@ def run_acf(c, epic, clobber, plot=True):
 
     # Measure LS period
     star = ro.prot(kepid=epic, x=x, y=y, yerr=yerr)
-    pgram_period = star.pgram_ps(plot=True, cutoff=30, clobber=clobber)
+    pgram_period = star.pgram_ps(filter_period=10, plot=True, cutoff=30,
+                                 clobber=clobber)
 
     return epic, period
 
@@ -134,7 +166,7 @@ def run_kalesalad(c, N, clobber=False):
                 return None
 
             # Measure ACF period
-            _, acf_period = run_acf(c, epic, plot=True)
+            _, acf_period = run_acf(c, epic, clobber=clobber, plot=True)
 
             # Measure LS period
             star = ro.prot(kepid=epic, x=x, y=y, yerr=yerr)
